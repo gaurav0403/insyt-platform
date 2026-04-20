@@ -1,0 +1,364 @@
+# Kalyan Jewellers Entity Taxonomy v1.0
+# Machine-readable format for entity resolution pipeline
+# Source: docs/kalyan_taxonomy_v1.md
+
+client:
+  name: "Kalyan Jewellers India Limited"
+  taxonomy_version: "1.0"
+
+entities:
+
+  # === PRIMARY COMPANY ===
+  - canonical_name: "Kalyan Jewellers India Limited"
+    type: company
+    aliases:
+      - Kalyan Jewellers
+      - Kalyan Jewelers
+      - Kalyan Jewellery
+      - Kalyan
+      - KJIL
+      - Kalyankjil
+      - KALYANKJIL
+    metadata:
+      nse_ticker: KALYANKJIL
+      bse_code: "543278"
+      hq: Thrissur, Kerala
+      founded: 1993
+      listed: 2021-03
+      category: primary
+
+  # === SUB-BRANDS ===
+  - canonical_name: "Candere"
+    type: company
+    aliases:
+      - Candere by Kalyan Jewellers
+      - CandereDotCom
+      - candere.com
+    metadata:
+      parent: Kalyan Jewellers India Limited
+      acquired: 2017
+      category: sub_brand
+
+  # === LEADERSHIP ===
+  - canonical_name: "T.S. Kalyanaraman"
+    type: person
+    aliases:
+      - TS Kalyanaraman
+      - Kalyanaraman
+      - T S Kalyanaraman
+    metadata:
+      role: Chairman & Managing Director
+      priority: high
+      category: leadership
+
+  - canonical_name: "Ramesh Kalyanaraman"
+    type: person
+    aliases:
+      - Ramesh K
+    metadata:
+      role: Executive Director
+      priority: high
+      category: leadership
+      note: spokesperson, handles analyst calls
+
+  - canonical_name: "Rajesh Kalyanaraman"
+    type: person
+    aliases:
+      - Rajesh K
+    metadata:
+      role: Executive Director
+      priority: high
+      category: leadership
+
+  - canonical_name: "Dr. Sajeev Chemmany"
+    type: person
+    aliases:
+      - Sajeev Chemmany
+      - Dr Sajeev
+    metadata:
+      role: Chief Marketing Officer
+      priority: high
+      category: leadership
+      note: client contact
+
+  # === BRAND AMBASSADORS ===
+  - canonical_name: "Amitabh Bachchan"
+    type: ambassador
+    aliases:
+      - SrBachchan
+      - Big B
+      - Amitabh
+    metadata:
+      region: Global
+      priority: critical
+      twitter: "@SrBachchan"
+
+  - canonical_name: "Jaya Bachchan"
+    type: ambassador
+    aliases: []
+    metadata:
+      region: Global
+      priority: high
+
+  - canonical_name: "Katrina Kaif"
+    type: ambassador
+    aliases:
+      - Katrina
+    metadata:
+      region: Global, North/West India
+      priority: critical
+      twitter: "@KatrinaKaif"
+
+  - canonical_name: "Nagarjuna Akkineni"
+    type: ambassador
+    aliases:
+      - Nagarjuna
+      - iamnagarjuna
+    metadata:
+      region: Telugu states
+      priority: high
+      twitter: "@iamnagarjuna"
+
+  - canonical_name: "Prabhu Ganesan"
+    type: ambassador
+    aliases:
+      - Prabhu
+    metadata:
+      region: Tamil Nadu
+      priority: high
+
+  - canonical_name: "Shivarajkumar"
+    type: ambassador
+    aliases:
+      - Shiva Rajkumar
+      - ShivaRajKumar
+    metadata:
+      region: Karnataka
+      priority: high
+      twitter: "@ShivaRajKumar"
+
+  - canonical_name: "Manju Warrier"
+    type: ambassador
+    aliases:
+      - Manju
+      - ManjuWarrier_
+    metadata:
+      region: Kerala
+      priority: critical
+      twitter: "@ManjuWarrier_"
+      note: heartland market ambassador
+
+  - canonical_name: "Shah Rukh Khan"
+    type: ambassador
+    aliases:
+      - SRK
+      - iamsrk
+      - Shahrukh Khan
+    metadata:
+      region: Middle East
+      priority: high
+      twitter: "@iamsrk"
+      note: GCC market
+
+  - canonical_name: "Shweta Bachchan Nanda"
+    type: ambassador
+    aliases:
+      - Shweta Bachchan
+    metadata:
+      region: Global
+      priority: medium
+
+  # === TIER 1 COMPETITORS ===
+  - canonical_name: "Tanishq"
+    type: competitor
+    aliases:
+      - Tanishq Jewellery
+      - TanishqJewelry
+    metadata:
+      parent: Titan Company Limited
+      nse_ticker: TITAN
+      tier: 1
+      note: "#1 competitor nationally, Tata-backed"
+
+  - canonical_name: "Malabar Gold & Diamonds"
+    type: competitor
+    aliases:
+      - Malabar Gold
+      - Malabar
+      - malabargoldiamd
+    metadata:
+      listed: false
+      tier: 1
+      note: strongest regional/GCC overlap
+
+  - canonical_name: "Joyalukkas"
+    type: competitor
+    aliases:
+      - Joy Alukkas
+      - joyalukkas
+    metadata:
+      listed: false
+      tier: 1
+      note: Kerala-origin, direct overlap
+
+  # === TIER 2 COMPETITORS ===
+  - canonical_name: "Senco Gold & Diamonds"
+    type: competitor
+    aliases:
+      - Senco Gold
+      - Senco
+      - sencogoldindia
+    metadata:
+      nse_ticker: SENCO
+      tier: 2
+
+  - canonical_name: "PC Jewellers"
+    type: competitor
+    aliases:
+      - PC Jeweller
+      - PCJ
+      - pcjeweller_com
+    metadata:
+      nse_ticker: PCJEWELLER
+      tier: 2
+
+  - canonical_name: "Thangamayil Jewellery"
+    type: competitor
+    aliases:
+      - Thangamayil
+    metadata:
+      nse_ticker: THANGAMAYL
+      tier: 2
+
+  # === TIER 3 COMPETITORS (digital) ===
+  - canonical_name: "CaratLane"
+    type: competitor
+    aliases:
+      - Caratlane
+    metadata:
+      parent: Titan Company Limited
+      tier: 3
+      note: digital-first, younger demo
+
+  - canonical_name: "BlueStone"
+    type: competitor
+    aliases:
+      - Bluestone
+      - Bluestone_in
+    metadata:
+      tier: 3
+
+  # === TIER 4 COMPETITORS (regional South) ===
+  - canonical_name: "GRT Jewellers"
+    type: competitor
+    aliases:
+      - GRT
+    metadata:
+      region: Tamil Nadu
+      tier: 4
+
+  - canonical_name: "Bhima Jewellers"
+    type: competitor
+    aliases:
+      - Bhima
+    metadata:
+      region: Kerala
+      tier: 4
+
+  - canonical_name: "Chemmanur International"
+    type: competitor
+    aliases:
+      - Chemmanur Jewellers
+      - Chemmanur
+    metadata:
+      region: Kerala
+      tier: 4
+
+  # === TIER 5 COMPETITORS (newer) ===
+  - canonical_name: "Indriya"
+    type: competitor
+    aliases:
+      - Aditya Birla Jewellery
+    metadata:
+      tier: 5
+      note: new launch, aggressive ambassador roster
+
+  - canonical_name: "Reliance Jewels"
+    type: competitor
+    aliases: []
+    metadata:
+      tier: 5
+
+  # === COLLECTIONS ===
+  - canonical_name: "Muhurat"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Wedding jewellery — flagship
+
+  - canonical_name: "Mudhra"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Handcrafted antique jewellery
+
+  - canonical_name: "Nimah"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Temple jewellery (South Indian inspired)
+
+  - canonical_name: "Antara"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Wedding diamonds (premium)
+
+  - canonical_name: "Ziah"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Solitaire-like diamond jewellery
+
+  - canonical_name: "Hera"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Daily wear diamonds
+
+  - canonical_name: "Rang"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Precious stones jewellery
+
+  - canonical_name: "Lila"
+    type: collection
+    aliases: []
+    metadata:
+      positioning: Coloured stones and diamond jewellery
+
+  # === REGULATORY ENTITIES ===
+  - canonical_name: "SEBI"
+    type: regulatory
+    aliases:
+      - Securities and Exchange Board of India
+    metadata:
+      relevance: Listed company obligations
+
+  - canonical_name: "BIS"
+    type: regulatory
+    aliases:
+      - Bureau of Indian Standards
+    metadata:
+      relevance: Hallmarking enforcement
+
+  - canonical_name: "Motilal Oswal AMC"
+    type: institutional_holder
+    aliases:
+      - MOAMC
+      - Motilal Oswal Midcap Fund
+      - Motilal Oswal
+    metadata:
+      holding_pct: "~6.30%"
+      note: major holder, involved in Jan 2025 rumour episode
