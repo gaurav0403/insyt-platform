@@ -1,10 +1,16 @@
 """
-News ingestion runner: orchestrates scraping → dedup → store for a publication.
-Can be called directly or via Celery task.
+News ingestion runner: orchestrates search/RSS → dedup → store.
 
 Usage:
-    python -m backend.ingestion.news.runner --publication moneycontrol
-    python -m backend.ingestion.news.runner --publication moneycontrol --no-filter
+    # Search-based (primary — requires INSYT_SERPER_API_KEY)
+    python -m backend.ingestion.news.runner --mode search --group kalyan_core
+    python -m backend.ingestion.news.runner --mode search --group competitors
+
+    # RSS-based (supplementary, strict filtering)
+    python -m backend.ingestion.news.runner --mode rss --publication economic_times
+
+    # Both
+    python -m backend.ingestion.news.runner --mode all
 """
 import json
 import sys
@@ -18,54 +24,40 @@ import structlog
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from backend.config import get_settings
-from backend.ingestion.news.scraper import scrape_publication
+from backend.ingestion.news.scraper import scrape_via_search, scrape_rss
+from backend.ingestion.news.sources import SEARCH_QUERIES, WORKING_RSS
 
 logger = structlog.get_logger()
 settings = get_settings()
 
 
-def run_news_ingestion(publication: str, filter_relevant: bool = True) -> int:
-    """
-    Run end-to-end ingestion for a publication.
-    Returns count of new mentions inserted.
-    """
+def store_mentions(mentions: list[dict]) -> int:
+    """Deduplicate and store mentions. Returns count of new inserts."""
     engine = create_engine(settings.database_url_sync)
-
-    # Step 1: Scrape
-    logger.info("ingestion.start", publication=publication)
-    mentions = scrape_publication(publication, filter_relevant=filter_relevant)
-
-    if not mentions:
-        logger.info("ingestion.no_mentions", publication=publication)
-        return 0
-
-    # Step 2: Deduplicate against existing DB records
     inserted = 0
     skipped = 0
 
     with Session(engine) as session:
         for m in mentions:
-            # Check URL dedup
-            existing = session.execute(
-                text("SELECT id FROM mentions WHERE source_url = :url"),
-                {"url": m["source_url"]},
-            ).fetchone()
+            # URL dedup
+            if m.get("source_url"):
+                existing = session.execute(
+                    text("SELECT id FROM mentions WHERE source_url = :url"),
+                    {"url": m["source_url"]},
+                ).fetchone()
+                if existing:
+                    skipped += 1
+                    continue
 
-            if existing:
-                skipped += 1
-                continue
-
-            # Check content hash dedup
+            # Content hash dedup
             existing_hash = session.execute(
                 text("SELECT id FROM mentions WHERE content_hash = :hash"),
                 {"hash": m["content_hash"]},
             ).fetchone()
-
             if existing_hash:
                 skipped += 1
                 continue
 
-            # Step 3: Insert
             session.execute(
                 text("""
                     INSERT INTO mentions
@@ -95,22 +87,79 @@ def run_news_ingestion(publication: str, filter_relevant: bool = True) -> int:
 
         session.commit()
 
-    logger.info(
-        "ingestion.complete",
-        publication=publication,
-        inserted=inserted,
-        skipped=skipped,
-    )
+    logger.info("store.complete", inserted=inserted, skipped=skipped)
     return inserted
+
+
+def run_search_ingestion(group: str = "kalyan_core") -> int:
+    """Run search-based ingestion for a query group."""
+    api_key = settings.serper_api_key
+    if not api_key:
+        logger.error("ingestion.no_serper_key")
+        print("ERROR: INSYT_SERPER_API_KEY not set. Cannot run search ingestion.")
+        return 0
+
+    logger.info("ingestion.search.start", group=group)
+    mentions = scrape_via_search(api_key, group)
+    if not mentions:
+        print(f"No relevant mentions found for query group '{group}'.")
+        return 0
+
+    count = store_mentions(mentions)
+    print(f"Done. Inserted {count} new mentions via search ({group}).")
+    return count
+
+
+def run_rss_ingestion(publication: str) -> int:
+    """Run RSS ingestion with strict relevance filtering."""
+    logger.info("ingestion.rss.start", publication=publication)
+    mentions = scrape_rss(publication)
+    if not mentions:
+        print(f"No relevant mentions from {publication} RSS feeds.")
+        return 0
+
+    count = store_mentions(mentions)
+    print(f"Done. Inserted {count} relevant mentions from {publication} RSS.")
+    return count
+
+
+def run_all_ingestion() -> dict:
+    """Run all ingestion strategies."""
+    results = {}
+
+    # Search-based (if API key available)
+    if settings.serper_api_key:
+        for group in SEARCH_QUERIES:
+            results[f"search_{group}"] = run_search_ingestion(group)
+    else:
+        print("Skipping search ingestion (no INSYT_SERPER_API_KEY)")
+
+    # RSS-based with filtering
+    for pub in WORKING_RSS:
+        results[f"rss_{pub}"] = run_rss_ingestion(pub)
+
+    return results
+
+
+# Keep backward compatibility for the /ingest endpoint
+def run_news_ingestion(publication: str, filter_relevant: bool = True) -> int:
+    """Backward-compatible entry point. Now always filters."""
+    return run_rss_ingestion(publication)
 
 
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run news ingestion for a publication")
-    parser.add_argument("--publication", default="moneycontrol", help="Publication key")
-    parser.add_argument("--no-filter", action="store_true", help="Skip relevance filtering (ingest all)")
+    parser = argparse.ArgumentParser(description="Run news ingestion")
+    parser.add_argument("--mode", choices=["search", "rss", "all"], default="all")
+    parser.add_argument("--group", default="kalyan_core", help="Search query group")
+    parser.add_argument("--publication", default="economic_times", help="RSS publication key")
     args = parser.parse_args()
 
-    count = run_news_ingestion(args.publication, filter_relevant=not args.no_filter)
-    print(f"\nDone. Inserted {count} new mentions from {args.publication}.")
+    if args.mode == "search":
+        run_search_ingestion(args.group)
+    elif args.mode == "rss":
+        run_rss_ingestion(args.publication)
+    else:
+        results = run_all_ingestion()
+        print(f"\nTotal results: {json.dumps(results, indent=2)}")
