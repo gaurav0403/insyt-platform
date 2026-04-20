@@ -51,8 +51,12 @@ def seed_database():
         else:
             client_id = uuid.uuid4()
 
-        # Load taxonomy
-        taxonomy_path = Path(__file__).resolve().parent.parent.parent / "taxonomy" / "kalyan_v1.yaml"
+        # Load taxonomy — check multiple locations (local dev vs Railway container)
+        candidates = [
+            Path(__file__).resolve().parent.parent.parent / "taxonomy" / "kalyan_v1.yaml",
+            Path(__file__).resolve().parent.parent / "taxonomy_kalyan_v1.yaml",
+        ]
+        taxonomy_path = next((p for p in candidates if p.exists()), candidates[0])
         taxonomy = load_taxonomy(str(taxonomy_path))
 
         # Upsert client
