@@ -92,14 +92,9 @@ def store_mentions(mentions: list[dict]) -> int:
 
 
 def run_search_ingestion(group: str = "kalyan_core") -> int:
-    """Run search-based ingestion for a query group."""
-    api_key = settings.serper_api_key
-    if not api_key:
-        logger.error("ingestion.no_serper_key")
-        print("ERROR: INSYT_SERPER_API_KEY not set. Cannot run search ingestion.")
-        return 0
-
-    logger.info("ingestion.search.start", group=group)
+    """Run search-based ingestion for a query group. Uses Serper if key available, else Google News RSS."""
+    api_key = settings.serper_api_key or ""
+    logger.info("ingestion.search.start", group=group, has_serper=bool(api_key))
     mentions = scrape_via_search(api_key, group)
     if not mentions:
         print(f"No relevant mentions found for query group '{group}'.")

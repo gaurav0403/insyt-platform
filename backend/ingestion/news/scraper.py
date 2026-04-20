@@ -64,11 +64,40 @@ def extract_article_text(html: str, url: str) -> Optional[str]:
 
 
 # ============================================================
-# SERPER-BASED SEARCH INGESTION (primary strategy)
+# SEARCH INGESTION — Google News RSS (free) + Serper API (paid)
 # ============================================================
 
-def search_google_news(query: str, api_key: str, num_results: int = 10) -> list[dict]:
-    """Search Google News via Serper API."""
+def search_google_news_rss(query: str) -> list[dict]:
+    """
+    Search Google News via its public RSS feed. Free, no API key needed.
+    Returns list of dicts with title, link, snippet, source, date.
+    """
+    import urllib.parse
+    encoded = urllib.parse.quote_plus(query)
+    rss_url = f"https://news.google.com/rss/search?q={encoded}&hl=en-IN&gl=IN&ceid=IN:en"
+
+    try:
+        content = fetch_url(rss_url)
+        if not content:
+            return []
+        feed = feedparser.parse(content)
+        results = []
+        for entry in feed.entries[:15]:
+            results.append({
+                "title": getattr(entry, "title", ""),
+                "link": getattr(entry, "link", ""),
+                "snippet": getattr(entry, "summary", ""),
+                "source": getattr(entry, "source", {}).get("title", "") if hasattr(entry, "source") else "",
+                "date": getattr(entry, "published", ""),
+            })
+        return results
+    except Exception as e:
+        logger.warning("google_news_rss.failed", query=query, error=str(e))
+        return []
+
+
+def search_serper(query: str, api_key: str, num_results: int = 10) -> list[dict]:
+    """Search Google News via Serper API (paid)."""
     try:
         resp = httpx.post(
             "https://google.serper.dev/news",
@@ -82,6 +111,19 @@ def search_google_news(query: str, api_key: str, num_results: int = 10) -> list[
     except Exception as e:
         logger.warning("serper.search_failed", query=query, error=str(e))
         return []
+
+
+def search_google_news(query: str, api_key: str = "", num_results: int = 10) -> list[dict]:
+    """
+    Search for news. Uses Serper if API key available, falls back to
+    Google News RSS (free, no key needed).
+    """
+    if api_key:
+        results = search_serper(query, api_key, num_results)
+        if results:
+            return results
+    # Fallback to free Google News RSS
+    return search_google_news_rss(query)
 
 
 def scrape_via_search(api_key: str, query_group: str = "kalyan_core") -> list[dict]:
