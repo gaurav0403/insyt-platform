@@ -25,8 +25,14 @@ def run_migrations_offline():
 
 
 def run_migrations_online():
+    # Use INSYT_DATABASE_URL_SYNC env var if available (Railway), fallback to alembic.ini
+    db_url = os.environ.get("INSYT_DATABASE_URL_SYNC")
+    if db_url:
+        cfg = {"sqlalchemy.url": db_url}
+    else:
+        cfg = config.get_section(config.config_ini_section, {})
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        cfg,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
