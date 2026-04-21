@@ -43,14 +43,35 @@ function MentionRow({ mention }: { mention: Mention }) {
   return (
     <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-ink truncate">
-          {mention.title || "Untitled"}
-        </p>
+        {mention.source_url ? (
+          <a
+            href={mention.source_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-ink hover:text-ochre transition-colors truncate block"
+          >
+            {mention.title || "Untitled"}
+          </a>
+        ) : (
+          <p className="text-sm font-medium text-ink truncate">
+            {mention.title || "Untitled"}
+          </p>
+        )}
         <div className="flex items-center gap-2 mt-1">
           <Badge variant="secondary" className="text-label">
             {mention.source_publication || mention.source_type}
           </Badge>
           <span className="text-meta text-stone">{time}</span>
+          {mention.source_url && (
+            <a
+              href={mention.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-meta text-stone hover:text-ochre"
+            >
+              ↗
+            </a>
+          )}
         </div>
       </div>
     </div>

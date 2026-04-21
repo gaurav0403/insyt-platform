@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchAPI, type Mention } from "@/lib/api";
@@ -11,7 +11,7 @@ export default function MentionsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAPI<{ mentions: Mention[] }>("/api/mentions/?limit=50")
+    fetchAPI<{ mentions: Mention[] }>("/api/mentions/?sort=relevance&limit=50")
       .then((data) => setMentions(data.mentions))
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -24,7 +24,7 @@ export default function MentionsPage() {
           Mention feed
         </h1>
         <p className="text-base text-slate mt-2">
-          All ingested mentions across sources, newest first.
+          All ingested mentions, sorted by relevance.
         </p>
       </div>
 
@@ -41,15 +41,26 @@ export default function MentionsPage() {
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-ink">
-                      {m.title || "Untitled"}
-                    </h3>
+                    {m.source_url ? (
+                      <a
+                        href={m.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium text-ink hover:text-ochre transition-colors underline decoration-border hover:decoration-ochre"
+                      >
+                        {m.title || "Untitled"}
+                      </a>
+                    ) : (
+                      <h3 className="text-sm font-medium text-ink">
+                        {m.title || "Untitled"}
+                      </h3>
+                    )}
                     {m.raw_content && (
                       <p className="text-sm text-slate mt-1 line-clamp-2 leading-relaxed">
                         {m.raw_content}
                       </p>
                     )}
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge variant="secondary" className="text-label">
                         {m.source_publication || m.source_type}
                       </Badge>
@@ -62,10 +73,27 @@ export default function MentionsPage() {
                             })
                           : "—"}
                       </span>
-                      {m.language && (
-                        <Badge variant="outline" className="text-label">
-                          {m.language.toUpperCase()}
+                      {m.relevance_tier && (
+                        <Badge
+                          variant="outline"
+                          className={
+                            m.relevance_tier === "strong"
+                              ? "text-label border-ochre/40 text-ochre"
+                              : "text-label"
+                          }
+                        >
+                          {m.relevance_tier}
                         </Badge>
+                      )}
+                      {m.source_url && (
+                        <a
+                          href={m.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-meta text-stone hover:text-ochre transition-colors"
+                        >
+                          View source ↗
+                        </a>
                       )}
                     </div>
                   </div>

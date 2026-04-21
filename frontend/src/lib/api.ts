@@ -21,6 +21,9 @@ export interface Mention {
   ingested_at: string | null;
   language: string | null;
   raw_content: string | null;
+  relevance_tier: string | null;
+  relevance_score: number | null;
+  query_group: string | null;
 }
 
 export interface MentionStats {
