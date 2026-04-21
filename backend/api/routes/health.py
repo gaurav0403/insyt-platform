@@ -65,6 +65,20 @@ async def run_rss_ingest(publication: str = "economic_times"):
         return {"status": "error", "message": str(e)}
 
 
+@router.post("/backfill")
+async def run_backfill(start: str = "2025-01-01", end: str = "2026-04-21"):
+    """Run historical backfill for a date range."""
+    try:
+        result = subprocess.run(
+            ["python", "-m", "backend.ingestion.news.backfill", "--start", start, "--end", end],
+            capture_output=True, text=True, timeout=600, cwd="/app",
+        )
+        return {"status": "ok" if result.returncode == 0 else "error",
+                "stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @router.post("/purge-mentions")
 async def purge_all_mentions():
     """Delete all mentions. Used to clean noise data during development."""
