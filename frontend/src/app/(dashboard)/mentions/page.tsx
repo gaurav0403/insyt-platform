@@ -102,7 +102,7 @@ export default function MentionsPage() {
           Search
         </Button>
 
-        <Select value={sort} onValueChange={(v) => { setSort(v); setPage(0); }}>
+        <Select value={sort} onValueChange={(v) => { if (v) { setSort(v); setPage(0); } }}>
           <SelectTrigger className="w-40 h-9 text-sm">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -113,7 +113,7 @@ export default function MentionsPage() {
           </SelectContent>
         </Select>
 
-        <Select value={pubFilter} onValueChange={(v) => { setPubFilter(v); setPage(0); }}>
+        <Select value={pubFilter} onValueChange={(v) => { if (v) { setPubFilter(v); setPage(0); } }}>
           <SelectTrigger className="w-48 h-9 text-sm">
             <SelectValue placeholder="All publications" />
           </SelectTrigger>
