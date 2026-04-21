@@ -143,18 +143,18 @@ export default function BriefPage() {
           <>
             <MetricCard
               label="Total mentions"
-              value={stats?.total ?? 0}
-              sub={`Across ${Object.keys(stats?.by_source ?? {}).length} source types`}
+              value={(stats?.total ?? 0).toLocaleString()}
+              sub={`${Object.keys(stats?.by_publication ?? {}).length}+ publications`}
             />
             <MetricCard
-              label="Active narratives"
-              value="—"
-              sub="Analysis pipeline pending"
+              label="Sentiment pulse"
+              value={stats?.avg_sentiment != null ? (stats.avg_sentiment > 0 ? "+" : "") + stats.avg_sentiment.toFixed(2) : "—"}
+              sub={stats?.analyzed ? `${stats.analyzed.toLocaleString()} analyzed` : "Pending"}
             />
             <MetricCard
-              label="Alerts"
-              value="0"
-              sub="No active alerts"
+              label="Entity links"
+              value={(stats?.entity_links ?? 0).toLocaleString()}
+              sub="Across 39 tracked entities"
             />
           </>
         )}

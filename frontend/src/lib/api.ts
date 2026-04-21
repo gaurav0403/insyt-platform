@@ -29,6 +29,10 @@ export interface Mention {
 export interface MentionStats {
   total: number;
   by_source: Record<string, number>;
+  by_publication: Record<string, number>;
+  analyzed: number;
+  entity_links: number;
+  avg_sentiment: number | null;
 }
 
 export interface Entity {
