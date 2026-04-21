@@ -141,7 +141,7 @@ def search_searchapi(query: str, api_key: str, num_results: int = 10) -> list[di
                 "link": r.get("link", ""),
                 "snippet": r.get("snippet", ""),
                 "source": r.get("source", {}).get("name", "") if isinstance(r.get("source"), dict) else r.get("source", ""),
-                "date": r.get("date", ""),
+                "date": r.get("iso_date") or r.get("date", ""),  # prefer iso_date for proper parsing
             })
         return results
     except Exception as e:
@@ -222,7 +222,7 @@ def scrape_via_search(api_key: str, query_group: str = "kalyan_core") -> list[di
                 "source_publication": publication,
                 "title": title,
                 "author": None,
-                "published_at": _parse_serper_date(date_str),
+                "published_at": _parse_date(date_str),
                 "ingested_at": datetime.now(timezone.utc),
                 "raw_content": full_text,
                 "content_hash": content_hash(full_text),
@@ -242,13 +242,35 @@ def scrape_via_search(api_key: str, query_group: str = "kalyan_core") -> list[di
     return mentions
 
 
-def _parse_serper_date(date_str: str) -> datetime:
-    """Parse Serper date strings like '2 hours ago', 'Apr 20, 2026'."""
+def _parse_date(date_str: str) -> datetime:
+    """Parse date strings: ISO format, RFC 2822, or relative ('3 days ago')."""
+    if not date_str:
+        return datetime.now(timezone.utc)
+
+    # Handle relative dates like "15 hours ago", "3 days ago"
+    import re
+    relative_match = re.match(r"(\d+)\s+(minute|hour|day|week|month)s?\s+ago", date_str.lower())
+    if relative_match:
+        from datetime import timedelta
+        amount = int(relative_match.group(1))
+        unit = relative_match.group(2)
+        delta_map = {"minute": timedelta(minutes=amount), "hour": timedelta(hours=amount),
+                     "day": timedelta(days=amount), "week": timedelta(weeks=amount),
+                     "month": timedelta(days=amount * 30)}
+        return datetime.now(timezone.utc) - delta_map.get(unit, timedelta())
+
+    # Try standard date parsing (ISO, RFC 2822, etc.)
     from dateutil import parser as dateparser
     try:
-        return dateparser.parse(date_str).replace(tzinfo=timezone.utc)
+        parsed = dateparser.parse(date_str)
+        if parsed:
+            if parsed.tzinfo is None:
+                return parsed.replace(tzinfo=timezone.utc)
+            return parsed
     except Exception:
-        return datetime.now(timezone.utc)
+        pass
+
+    return datetime.now(timezone.utc)
 
 
 # ============================================================
