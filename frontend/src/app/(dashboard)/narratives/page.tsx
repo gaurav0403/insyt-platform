@@ -58,6 +58,76 @@ function sentimentDot(score: number | null) {
   return <span className="inline-block w-2 h-2 rounded-full bg-stone" />;
 }
 
+function SentimentSparkline({ trajectory }: { trajectory: number[] | null }) {
+  if (!trajectory || trajectory.length < 2) return null;
+
+  const width = 80;
+  const height = 24;
+  const padding = 2;
+
+  const min = Math.min(...trajectory, -0.5);
+  const max = Math.max(...trajectory, 0.5);
+  const range = max - min || 1;
+
+  const points = trajectory.map((val, i) => {
+    const x = padding + (i / (trajectory.length - 1)) * (width - padding * 2);
+    const y = height - padding - ((val - min) / range) * (height - padding * 2);
+    return `${x},${y}`;
+  });
+
+  const avg = trajectory.reduce((a, b) => a + b, 0) / trajectory.length;
+  const color = avg > 0.15 ? "#16a34a" : avg < -0.15 ? "#B7410E" : "#8A867E";
+
+  // Zero line
+  const zeroY = height - padding - ((0 - min) / range) * (height - padding * 2);
+
+  return (
+    <svg width={width} height={height} className="shrink-0">
+      <line x1={padding} y1={zeroY} x2={width - padding} y2={zeroY}
+        stroke="#E2DCD2" strokeWidth="1" strokeDasharray="2,2" />
+      <polyline
+        points={points.join(" ")}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* End dot */}
+      <circle
+        cx={parseFloat(points[points.length - 1].split(",")[0])}
+        cy={parseFloat(points[points.length - 1].split(",")[1])}
+        r="2.5"
+        fill={color}
+      />
+    </svg>
+  );
+}
+
+function SentimentBadge({ trajectory }: { trajectory: number[] | null }) {
+  if (!trajectory || trajectory.length === 0) return null;
+  const avg = trajectory.reduce((a, b) => a + b, 0) / trajectory.length;
+
+  if (avg > 0.2) return (
+    <span className="inline-flex items-center gap-1 text-meta text-green-700 bg-green-50 px-1.5 py-0.5 rounded">
+      <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-600" />
+      +{avg.toFixed(2)}
+    </span>
+  );
+  if (avg < -0.2) return (
+    <span className="inline-flex items-center gap-1 text-meta text-ochre bg-ochre/5 px-1.5 py-0.5 rounded">
+      <span className="inline-block w-1.5 h-1.5 rounded-full bg-ochre" />
+      {avg.toFixed(2)}
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-1 text-meta text-stone bg-stone/5 px-1.5 py-0.5 rounded">
+      <span className="inline-block w-1.5 h-1.5 rounded-full bg-stone" />
+      {avg > 0 ? "+" : ""}{avg.toFixed(2)}
+    </span>
+  );
+}
+
 export default function NarrativesPage() {
   const [entityGroups, setEntityGroups] = useState<EntityGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,23 +216,33 @@ export default function NarrativesPage() {
                       <p className="text-xs text-slate line-clamp-2 leading-relaxed">
                         {n.description}
                       </p>
-                      <div className="flex items-center gap-3 mt-3">
-                        <span className="text-meta text-stone">
-                          {n.mention_count} mentions
-                        </span>
-                        {n.velocity_score != null && n.velocity_score > 0 && (
+
+                      {/* Sentiment visual */}
+                      <div className="flex items-center justify-between mt-3 gap-2">
+                        <div className="flex items-center gap-3">
+                          <SentimentBadge trajectory={n.sentiment_trajectory} />
                           <span className="text-meta text-stone">
-                            {n.velocity_score.toFixed(1)}/day
+                            {n.mention_count} mentions
                           </span>
-                        )}
-                        {n.first_seen_at && n.last_seen_at && (
+                          {n.velocity_score != null && n.velocity_score > 0 && (
+                            <span className="text-meta text-stone">
+                              {n.velocity_score.toFixed(1)}/day
+                            </span>
+                          )}
+                        </div>
+                        <SentimentSparkline trajectory={n.sentiment_trajectory} />
+                      </div>
+
+                      {/* Date range */}
+                      {n.first_seen_at && n.last_seen_at && (
+                        <div className="mt-2">
                           <span className="text-meta text-stone">
                             {new Date(n.first_seen_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
                             {" → "}
                             {new Date(n.last_seen_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
