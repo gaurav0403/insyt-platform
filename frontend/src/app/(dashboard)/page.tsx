@@ -78,21 +78,33 @@ function MentionRow({ mention }: { mention: Mention }) {
   );
 }
 
+interface BriefData {
+  headline: string | null;
+  subheadline: string | null;
+  opening_paragraph: string | null;
+  sections: { title: string; content: string }[] | string | null;
+  metrics: { label: string; value: string; source: string }[] | string | null;
+  date: string | null;
+}
+
 export default function BriefPage() {
   const [stats, setStats] = useState<MentionStats | null>(null);
   const [mentions, setMentions] = useState<Mention[]>([]);
+  const [brief, setBrief] = useState<BriefData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const [statsData, mentionsData] = await Promise.all([
+        const [statsData, mentionsData, briefData] = await Promise.all([
           fetchAPI<MentionStats>("/api/mentions/stats"),
-          fetchAPI<{ mentions: Mention[] }>("/api/mentions/?limit=10"),
+          fetchAPI<{ mentions: Mention[] }>("/api/mentions/?limit=10&sort=date"),
+          fetchAPI<{ brief: BriefData | null }>("/api/briefs/latest"),
         ]);
         setStats(statsData);
         setMentions(mentionsData.mentions);
+        setBrief(briefData.brief);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load data");
       } finally {
@@ -120,16 +132,40 @@ export default function BriefPage() {
 
   return (
     <div className="p-6 lg:p-8 space-y-8">
-      {/* Headline */}
+      {/* Brief headline */}
       <div>
-        <h1 className="font-display text-4xl lg:text-5xl font-semibold text-ink leading-tight">
-          The Kalyan narrative, today
-        </h1>
-        <p className="text-base text-slate mt-2 max-w-2xl leading-relaxed">
-          Context intelligence across news, social, regulatory, and market
-          signals for Kalyan Jewellers India Limited.
-        </p>
+        {brief ? (
+          <>
+            <h1 className="font-display text-3xl lg:text-4xl font-semibold text-ink leading-tight">
+              {brief.headline}
+            </h1>
+            <p className="text-base text-slate mt-2 max-w-3xl leading-relaxed">
+              {brief.subheadline}
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="font-display text-4xl lg:text-5xl font-semibold text-ink leading-tight">
+              The Kalyan narrative, today
+            </h1>
+            <p className="text-base text-slate mt-2 max-w-2xl leading-relaxed">
+              Context intelligence across news, social, regulatory, and market
+              signals for Kalyan Jewellers India Limited.
+            </p>
+          </>
+        )}
       </div>
+
+      {/* Brief opening paragraph */}
+      {brief?.opening_paragraph && (
+        <Card className="bg-parchment border-0">
+          <CardContent className="pt-5 pb-5">
+            <p className="text-[15px] text-ink leading-[1.7] max-w-3xl">
+              {brief.opening_paragraph}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Metric cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
