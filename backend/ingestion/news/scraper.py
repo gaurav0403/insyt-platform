@@ -115,32 +115,56 @@ def search_google_news_rss(query: str) -> list[dict]:
         return []
 
 
-def search_serper(query: str, api_key: str, num_results: int = 10) -> list[dict]:
-    """Search Google News via Serper API (paid)."""
+def search_searchapi(query: str, api_key: str, num_results: int = 10) -> list[dict]:
+    """Search Google News via SearchAPI.io — returns real article URLs."""
     try:
-        resp = httpx.post(
-            "https://google.serper.dev/news",
-            json={"q": query, "num": num_results, "gl": "in", "hl": "en"},
-            headers={"X-API-KEY": api_key, "Content-Type": "application/json"},
+        resp = httpx.get(
+            "https://www.searchapi.io/api/v1/search",
+            params={
+                "engine": "google_news",
+                "q": query,
+                "api_key": api_key,
+                "gl": "in",
+                "hl": "en",
+                "num": num_results,
+            },
             timeout=15,
         )
         resp.raise_for_status()
         data = resp.json()
-        return data.get("news", [])
+        # SearchAPI returns news_results or organic_results
+        raw_results = data.get("news_results", data.get("organic_results", []))
+        results = []
+        for r in raw_results:
+            results.append({
+                "title": r.get("title", ""),
+                "link": r.get("link", ""),
+                "snippet": r.get("snippet", ""),
+                "source": r.get("source", {}).get("name", "") if isinstance(r.get("source"), dict) else r.get("source", ""),
+                "date": r.get("date", ""),
+            })
+        return results
     except Exception as e:
-        logger.warning("serper.search_failed", query=query, error=str(e))
+        logger.warning("searchapi.failed", query=query, error=str(e))
         return []
 
 
 def search_google_news(query: str, api_key: str = "", num_results: int = 10) -> list[dict]:
     """
-    Search for news. Uses Serper if API key available, falls back to
-    Google News RSS (free, no key needed).
+    Search for news. Priority:
+    1. SearchAPI.io (INSYT_SEARCHAPI_KEY) — real URLs, best quality
+    2. Google News RSS (free fallback) — redirect URLs
     """
-    if api_key:
-        results = search_serper(query, api_key, num_results)
+    from backend.config import get_settings
+    settings = get_settings()
+
+    # Try SearchAPI.io first (if key available)
+    searchapi_key = getattr(settings, "searchapi_key", "")
+    if searchapi_key:
+        results = search_searchapi(query, searchapi_key, num_results)
         if results:
             return results
+
     # Fallback to free Google News RSS
     return search_google_news_rss(query)
 

@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
 
     # Ingestion APIs
-    serper_api_key: str = ""
+    searchapi_key: str = ""  # searchapi.io — primary search
+    serper_api_key: str = ""  # serper.dev — legacy/fallback
     twitter_api_key: str = ""  # twitterapi.io
     youtube_api_key: str = ""
     google_places_api_key: str = ""
