@@ -83,11 +83,30 @@ def search_google_news_rss(query: str) -> list[dict]:
         feed = feedparser.parse(content)
         results = []
         for entry in feed.entries[:15]:
+            # Extract source domain for constructing article URL
+            source_obj = getattr(entry, "source", None)
+            source_name = ""
+            source_href = ""
+            if source_obj:
+                source_name = getattr(source_obj, "title", "")
+                source_href = getattr(source_obj, "href", "")
+
+            # Build a direct link: use source domain + Google search as fallback
+            title = getattr(entry, "title", "")
+            # Construct a "find this article" URL using the source domain
+            article_url = source_href  # publication home as base
+            if source_href and title:
+                # Google search scoped to source domain finds the article
+                import urllib.parse as up
+                search_title = title.split(" - ")[0] if " - " in title else title
+                article_url = f"https://www.google.com/search?q={up.quote_plus(search_title)}+site:{source_href.replace('https://','').replace('http://','')}"
+
             results.append({
-                "title": getattr(entry, "title", ""),
-                "link": getattr(entry, "link", ""),
+                "title": title,
+                "link": article_url or getattr(entry, "link", ""),
                 "snippet": getattr(entry, "summary", ""),
-                "source": getattr(entry, "source", {}).get("title", "") if hasattr(entry, "source") else "",
+                "source": source_name,
+                "source_href": source_href,
                 "date": getattr(entry, "published", ""),
             })
         return results
