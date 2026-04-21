@@ -18,6 +18,16 @@ async def list_briefs(
     return {"briefs": [_serialize(b) for b in briefs]}
 
 
+@router.get("/latest")
+async def latest_brief(db: AsyncSession = Depends(get_db)):
+    query = select(Brief).order_by(Brief.date.desc().nullslast()).limit(1)
+    result = await db.execute(query)
+    brief = result.scalar_one_or_none()
+    if not brief:
+        return {"brief": None}
+    return {"brief": _serialize(brief)}
+
+
 @router.get("/{brief_id}")
 async def get_brief(brief_id: str, db: AsyncSession = Depends(get_db)):
     brief = await db.get(Brief, brief_id)

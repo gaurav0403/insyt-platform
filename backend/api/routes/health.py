@@ -93,6 +93,20 @@ async def run_entity_analysis():
         return {"status": "error", "message": str(e)}
 
 
+@router.post("/generate/brief")
+async def generate_daily_brief(date: str = None):
+    """Generate a daily intelligence brief using Claude Sonnet."""
+    try:
+        cmd = ["python", "-m", "backend.intelligence.briefs"]
+        if date:
+            cmd.extend(["--date", date])
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd="/app")
+        return {"status": "ok" if result.returncode == 0 else "error",
+                "stdout": result.stdout, "stderr": result.stderr}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @router.post("/analyze/narratives")
 async def run_narrative_analysis():
     """Run narrative clustering on analyzed mentions."""
