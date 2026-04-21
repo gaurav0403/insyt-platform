@@ -154,28 +154,13 @@ def scrape_via_search(api_key: str, query_group: str = "kalyan_core") -> list[di
             source_name = item.get("source", "")
             date_str = item.get("date", "")
 
-            # Resolve Google News redirect to actual article URL + extract text
-            actual_url = url
-            try:
-                with httpx.Client(timeout=HTTP_TIMEOUT, headers=REQUEST_HEADERS, follow_redirects=True) as client:
-                    resp = client.get(url)
-                    resp.raise_for_status()
-                    actual_url = str(resp.url)  # final URL after redirects
-                    html = resp.text
-                full_text = extract_article_text(html, actual_url)
-                if not full_text or len(full_text) < 100:
-                    full_text = snippet
-            except Exception as e:
-                logger.warning("scraper.fetch_failed", url=url[:80], error=str(e))
-                full_text = snippet
-
-            if not full_text:
+            # Use snippet as content — Google News doesn't allow URL resolution
+            # The snippet + title provides enough signal for entity resolution
+            # and sentiment analysis. Full-text extraction from source pubs
+            # happens separately via direct scraping when needed.
+            full_text = snippet if snippet else title
+            if not full_text or len(full_text) < 20:
                 continue
-
-            # Dedup on actual URL
-            if actual_url in seen_urls:
-                continue
-            seen_urls.add(actual_url)
 
             # Score relevance
             tier, score = score_relevance(title, full_text)
@@ -185,12 +170,12 @@ def scrape_via_search(api_key: str, query_group: str = "kalyan_core") -> list[di
             if tier == "noise":
                 continue
 
-            publication = identify_publication(actual_url) or source_name
+            publication = source_name or identify_publication(url) or "Unknown"
 
             mention = {
                 "id": uuid.uuid4(),
                 "source_type": "news",
-                "source_url": actual_url,
+                "source_url": url,
                 "source_publication": publication,
                 "title": title,
                 "author": None,
