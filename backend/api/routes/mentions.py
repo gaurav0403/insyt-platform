@@ -63,10 +63,24 @@ async def mention_stats(db: AsyncSession = Depends(get_db)):
         .order_by(func.count(Mention.id).desc())
         .limit(15)
     )
+    # Analysis stats
+    analyzed_count = await db.scalar(
+        select(func.count(MentionAnalysis.mention_id))
+    ) or 0
+    entity_links_count = await db.scalar(
+        select(func.count(text("*"))).select_from(text("mention_entities"))
+    ) or 0
+    avg_sentiment = await db.scalar(
+        select(func.avg(MentionAnalysis.sentiment_score))
+    )
+
     return {
         "total": total or 0,
         "by_source": {row[0]: row[1] for row in by_source.all()},
         "by_publication": {row[0]: row[1] for row in by_publication.all()},
+        "analyzed": analyzed_count,
+        "entity_links": entity_links_count,
+        "avg_sentiment": round(avg_sentiment, 3) if avg_sentiment else None,
     }
 
 

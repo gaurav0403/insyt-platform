@@ -79,6 +79,34 @@ async def run_backfill(start: str = "2025-01-01", end: str = "2026-04-21"):
         return {"status": "error", "message": str(e)}
 
 
+@router.post("/analyze/entities")
+async def run_entity_analysis():
+    """Run entity resolution on unprocessed mentions."""
+    try:
+        result = subprocess.run(
+            ["python", "-m", "backend.analysis.entities"],
+            capture_output=True, text=True, timeout=300, cwd="/app",
+        )
+        return {"status": "ok" if result.returncode == 0 else "error",
+                "stdout": result.stdout, "stderr": result.stderr}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.post("/analyze/sentiment")
+async def run_sentiment(haiku: bool = False):
+    """Run sentiment analysis on unprocessed mentions."""
+    try:
+        cmd = ["python", "-m", "backend.analysis.sentiment"]
+        if haiku:
+            cmd.append("--haiku")
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300, cwd="/app")
+        return {"status": "ok" if result.returncode == 0 else "error",
+                "stdout": result.stdout, "stderr": result.stderr}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @router.post("/purge-mentions")
 async def purge_all_mentions():
     """Delete all mentions. Used to clean noise data during development."""
