@@ -36,10 +36,18 @@ async def list_mentions(
     else:  # date
         query = query.order_by(Mention.published_at.desc())
 
+    # Get total count for pagination (before limit/offset)
+    count_query = select(func.count(Mention.id))
+    if source_type:
+        count_query = count_query.where(Mention.source_type == source_type)
+    if publication:
+        count_query = count_query.where(Mention.source_publication == publication)
+    total = await db.scalar(count_query) or 0
+
     query = query.offset(offset).limit(limit)
     result = await db.execute(query)
     mentions = result.scalars().all()
-    return {"mentions": [_serialize_mention(m) for m in mentions], "count": len(mentions)}
+    return {"mentions": [_serialize_mention(m) for m in mentions], "count": len(mentions), "total": total}
 
 
 @router.get("/stats")
