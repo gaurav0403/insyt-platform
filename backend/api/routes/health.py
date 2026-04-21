@@ -93,6 +93,20 @@ async def run_entity_analysis():
         return {"status": "error", "message": str(e)}
 
 
+@router.post("/analyze/narratives")
+async def run_narrative_analysis():
+    """Run narrative clustering on analyzed mentions."""
+    try:
+        result = subprocess.run(
+            ["python", "-m", "backend.analysis.narratives"],
+            capture_output=True, text=True, timeout=300, cwd="/app",
+        )
+        return {"status": "ok" if result.returncode == 0 else "error",
+                "stdout": result.stdout, "stderr": result.stderr}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
 @router.post("/analyze/sentiment")
 async def run_sentiment(haiku: bool = False):
     """Run sentiment analysis on unprocessed mentions."""
