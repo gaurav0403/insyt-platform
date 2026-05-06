@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — Ground Intelligence</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+
+  .chrome { border-bottom: 1px solid var(--slate-edge); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .nav { display: flex; gap: 24px; font-size: 14px; }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .chrome .actor { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .chrome .av { width: 28px; height: 28px; background: var(--vermilion); color: var(--bone); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+
+  .ph { padding: 32px 64px 24px; border-bottom: 2px solid var(--bone); display: flex; justify-content: space-between; align-items: flex-end; }
+  .ph h1 { margin: 0; font-size: 64px; font-weight: 500; line-height: 0.95; letter-spacing: -0.025em; }
+  .ph h1 em { font-style: italic; }
+  .ph h1 .stop { color: var(--vermilion-3); }
+  .ph .deck { font-style: italic; color: var(--bone-2); font-size: 16px; margin-top: 8px; max-width: 640px; }
+
+  .body { display: grid; grid-template-columns: 320px 1fr 360px; min-height: calc(100vh - 200px); }
+  .rail-l { border-right: 1px solid var(--slate-edge); padding: 24px; overflow-y: auto; }
+  .map { padding: 24px; }
+  .rail-r { border-left: 1px solid var(--slate-edge); padding: 24px; }
+
+  /* Left rail — locations */
+  .rail-l h4 { margin: 0 0 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); font-weight: 500; padding-bottom: 12px; border-bottom: 2px solid var(--bone); }
+  .loc { padding: 12px 0; border-bottom: 1px solid var(--slate-edge); cursor: pointer; }
+  .loc.active { background: var(--slate-2); margin: 0 -12px; padding: 12px; border-left: 2px solid var(--vermilion-3); border-bottom: 1px solid var(--slate-edge); }
+  .loc .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .loc .nm { font-size: 14px; font-weight: 500; letter-spacing: -0.005em; }
+  .loc .reg { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--bone-3); }
+  .loc .meta { display: flex; gap: 12px; margin-top: 6px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--bone-3); }
+  .loc .meta .neg { color: var(--vermilion-3); }
+  .loc .meta .pos { color: var(--positive); }
+
+  /* Map area */
+  .map h3 { margin: 0 0 6px; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; }
+  .map .deck { font-size: 13px; color: var(--bone-3); font-style: italic; line-height: 1.5; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--slate-edge); }
+  .map-frame { border: 1px solid var(--slate-edge); background: var(--slate-2); padding: 0; position: relative; height: 540px; overflow: hidden; }
+  .map-frame svg { width: 100%; height: 100%; display: block; }
+  .map-legend { position: absolute; bottom: 16px; left: 16px; background: var(--slate); border: 1px solid var(--slate-edge); padding: 10px 14px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--bone-3); text-transform: uppercase; }
+  .map-legend .row { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+  .map-legend .dot-l { width: 10px; height: 10px; border-radius: 50%; }
+  .map-scale { position: absolute; top: 16px; right: 16px; background: var(--slate); border: 1px solid var(--slate-edge); padding: 6px 10px; font-family: var(--mono); font-size: 10px; color: var(--bone-3); letter-spacing: 0.1em; }
+
+  /* Below map — review excerpts */
+  .reviews { margin-top: 24px; }
+  .reviews h4 { margin: 0 0 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); padding-bottom: 12px; border-bottom: 2px solid var(--bone); font-weight: 500; }
+  .review { padding: 14px 0; border-bottom: 1px solid var(--slate-edge); display: grid; grid-template-columns: 80px 1fr 60px; gap: 16px; }
+  .review .when { font-family: var(--mono); font-size: 10px; color: var(--bone-3); letter-spacing: 0.08em; }
+  .review .text { font-size: 14px; line-height: 1.5; color: var(--bone-2); font-style: italic; }
+  .review .text strong { color: var(--bone); font-weight: 500; font-style: normal; }
+  .review .src { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); text-align: right; }
+  .review.neg .src { color: var(--vermilion-3); }
+  .review.pos .src { color: var(--positive); }
+
+  /* Right rail — figures for active location */
+  .rail-r h4 { margin: 0 0 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); font-weight: 500; padding-bottom: 12px; border-bottom: 2px solid var(--bone); }
+  .fig { padding: 16px 0; border-bottom: 1px solid var(--slate-edge); }
+  .fig .k { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); margin-bottom: 6px; }
+  .fig .v { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; }
+  .fig .v.neg { color: var(--vermilion-3); }
+  .fig .v.pos { color: var(--positive); }
+  .fig .v.small { font-size: 17px; }
+  .fig .note { font-style: italic; font-size: 12px; color: var(--bone-3); margin-top: 4px; line-height: 1.4; }
+  .fig .spark { display: flex; align-items: flex-end; gap: 1px; height: 36px; margin-top: 8px; }
+  .fig .spark i { flex: 1; background: var(--bone-4); }
+  .fig .spark i.warm { background: var(--vermilion-3); }
+
+  .editorial { margin-top: 16px; padding: 16px; background: var(--slate-2); border-left: 2px solid var(--vermilion-3); font-size: 13px; line-height: 1.55; color: var(--bone-2); font-style: italic; }
+  .editorial .lab { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--vermilion-3); margin-bottom: 8px; font-style: normal; }
+</style>
+</head>
+<body class="on-slate">
+<div class="app">
+
+  <!-- Chrome -->
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark" style="font-size: 22px;">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a>Daily</a><a>Narrative</a><a>Replay</a><a>Drafts</a><a>Regional</a><a class="active">Ground</a><a>People</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">26 states · 612 cities · 218 showrooms</span>
+      <span class="meta">24-hour signal density</span>
+      <div class="actor"><div class="av">RK</div><span style="color: var(--bone-2);">Ramesh K.</span></div>
+    </div>
+  </div>
+
+  <!-- Page head -->
+  <div class="ph">
+    <div>
+      <h1>Ground <em>intelligence<span class="stop">.</span></em></h1>
+      <div class="deck">What is being said today, on the ground, at a particular place. Drawn from local reviews, regional press, vernacular social, walk-in surveys.</div>
+    </div>
+    <div style="font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3);">
+      Window: 7 days &nbsp;·&nbsp; Lens: hallmarking + service
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- LEFT — locations -->
+    <div class="rail-l">
+      <h4>Showrooms · sorted by signal density</h4>
+
+      <div class="loc active">
+        <div class="top"><span class="nm">Thrissur · Round North</span><span class="reg">KL · ML</span></div>
+        <div class="meta"><span class="neg">−0.58</span><span>312 signals</span><span>↑↑↑</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Coimbatore · RS Puram</span><span class="reg">TN · TA</span></div>
+        <div class="meta"><span class="neg">−0.34</span><span>184 signals</span><span>↑↑</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Kochi · MG Road</span><span class="reg">KL · ML</span></div>
+        <div class="meta"><span class="neg">−0.28</span><span>156 signals</span><span>↑↑</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Kozhikode · Mittai Theruvu</span><span class="reg">KL · ML</span></div>
+        <div class="meta"><span style="color: var(--bone-3);">−0.08</span><span>112 signals</span><span>↑</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Chennai · T. Nagar</span><span class="reg">TN · TA</span></div>
+        <div class="meta"><span class="pos">+0.32</span><span>248 signals</span><span>—</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Bengaluru · Jayanagar</span><span class="reg">KA · KN</span></div>
+        <div class="meta"><span class="pos">+0.41</span><span>144 signals</span><span>—</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Hyderabad · Banjara Hills</span><span class="reg">TS · TE</span></div>
+        <div class="meta"><span class="pos">+0.38</span><span>96 signals</span><span>—</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Mumbai · Lokhandwala</span><span class="reg">MH · MR</span></div>
+        <div class="meta"><span class="pos">+0.52</span><span>72 signals</span><span>—</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Delhi · Karol Bagh</span><span class="reg">DL · HI</span></div>
+        <div class="meta"><span class="pos">+0.18</span><span>48 signals</span><span>—</span></div>
+      </div>
+      <div class="loc">
+        <div class="top"><span class="nm">Lucknow · Hazratganj</span><span class="reg">UP · HI</span></div>
+        <div class="meta"><span style="color: var(--bone-3);">−0.04</span><span>22 signals</span><span>—</span></div>
+      </div>
+    </div>
+
+    <!-- CENTER — map -->
+    <div class="map">
+      <h3>The southern crescent · Kerala &amp; Tamil Nadu</h3>
+      <div class="deck">Bubble size encodes 24-hour signal volume. Color encodes sentiment. Vermilion is adversarial; bone is steady. The hallmarking conversation is, today, geographically narrow but deep.</div>
+
+      <div class="map-frame">
+        <svg viewBox="0 0 800 540" preserveAspectRatio="xMidYMid meet">
+          <!-- ambient land texture (a stylized south-india outline) -->
+          <path d="M260,30 L320,40 L380,60 L420,90 L450,140 L470,200 L470,260 L460,320 L450,380 L420,440 L380,500 L340,520 L300,520 L260,500 L240,460 L220,400 L210,340 L210,280 L220,220 L230,160 L240,90 Z"
+                fill="#16140F" stroke="#2A261E" stroke-width="1"/>
+
+          <!-- inland features hint -->
+          <line x1="240" y1="220" x2="380" y2="200" stroke="#2A261E" stroke-width="0.5" stroke-dasharray="2 4"/>
+          <line x1="240" y1="320" x2="380" y2="300" stroke="#2A261E" stroke-width="0.5" stroke-dasharray="2 4"/>
+          <line x1="260" y1="120" x2="380" y2="120" stroke="#2A261E" stroke-width="0.5" stroke-dasharray="2 4"/>
+
+          <!-- city dots -->
+          <!-- Bengaluru top right -->
+          <circle cx="380" cy="160" r="14" fill="#5A6B3F" opacity="0.85"/>
+          <text x="400" y="164" font-family="Spectral" font-size="13" fill="#E8E1D2">Bengaluru</text>
+          <text x="400" y="178" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">+0.41 · 144</text>
+
+          <!-- Chennai right -->
+          <circle cx="430" cy="240" r="20" fill="#5A6B3F" opacity="0.85"/>
+          <text x="450" y="244" font-family="Spectral" font-size="13" fill="#E8E1D2">Chennai</text>
+          <text x="450" y="258" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">+0.32 · 248</text>
+
+          <!-- Coimbatore center -->
+          <circle cx="320" cy="290" r="18" fill="#E85543" opacity="0.85"/>
+          <text x="342" y="284" font-family="Spectral" font-size="13" fill="#E8E1D2">Coimbatore · RS Puram</text>
+          <text x="342" y="298" font-family="JetBrains Mono" font-size="9" fill="#E85543" letter-spacing="1">−0.34 · 184</text>
+
+          <!-- Kochi -->
+          <circle cx="265" cy="340" r="17" fill="#E85543" opacity="0.85"/>
+          <text x="100" y="344" font-family="Spectral" font-size="13" fill="#E8E1D2" text-anchor="end">Kochi · MG Road</text>
+          <text x="100" y="358" font-family="JetBrains Mono" font-size="9" fill="#E85543" letter-spacing="1" text-anchor="end">−0.28 · 156</text>
+          <line x1="105" y1="340" x2="248" y2="340" stroke="#2A261E" stroke-width="0.5"/>
+
+          <!-- Thrissur (active, larger) -->
+          <circle cx="270" cy="295" r="26" fill="#E85543" opacity="0.95"/>
+          <circle cx="270" cy="295" r="34" fill="none" stroke="#E85543" stroke-width="1" opacity="0.5"/>
+          <circle cx="270" cy="295" r="42" fill="none" stroke="#E85543" stroke-width="0.5" opacity="0.3"/>
+          <text x="100" y="290" font-family="Spectral" font-size="14" fill="#E85543" font-weight="500" text-anchor="end">▍ Thrissur · Round North</text>
+          <text x="100" y="306" font-family="JetBrains Mono" font-size="9" fill="#E85543" letter-spacing="1" text-anchor="end">−0.58 · 312 signals</text>
+          <line x1="105" y1="296" x2="244" y2="296" stroke="#E85543" stroke-width="0.5"/>
+
+          <!-- Kozhikode -->
+          <circle cx="248" cy="240" r="14" fill="#7A7263" opacity="0.85"/>
+          <text x="100" y="244" font-family="Spectral" font-size="13" fill="#E8E1D2" text-anchor="end">Kozhikode</text>
+          <text x="100" y="258" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1" text-anchor="end">−0.08 · 112</text>
+          <line x1="105" y1="240" x2="234" y2="240" stroke="#2A261E" stroke-width="0.5"/>
+
+          <!-- Trivandrum -->
+          <circle cx="290" cy="450" r="9" fill="#7A7263" opacity="0.7"/>
+          <text x="305" y="454" font-family="Spectral" font-size="12" fill="#B8AF9C">Thiruvananthapuram</text>
+          <text x="305" y="468" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">+0.04 · 38</text>
+
+          <!-- Madurai -->
+          <circle cx="378" cy="380" r="10" fill="#7A7263" opacity="0.7"/>
+          <text x="392" y="384" font-family="Spectral" font-size="12" fill="#B8AF9C">Madurai</text>
+
+          <!-- compass -->
+          <text x="50" y="60" font-family="JetBrains Mono" font-size="10" fill="#7A7263" letter-spacing="2">N</text>
+          <line x1="50" y1="65" x2="50" y2="100" stroke="#7A7263" stroke-width="1"/>
+          <polygon points="50,65 46,73 54,73" fill="#7A7263"/>
+        </svg>
+
+        <div class="map-legend">
+          <div class="row"><span class="dot-l" style="background: var(--vermilion-3);"></span>Adversarial</div>
+          <div class="row"><span class="dot-l" style="background: var(--bone-3);"></span>Steady</div>
+          <div class="row"><span class="dot-l" style="background: var(--positive);"></span>Supportive</div>
+        </div>
+        <div class="map-scale">South India · 1:8M · 7d window</div>
+      </div>
+
+      <!-- Reviews under the map -->
+      <div class="reviews">
+        <h4>Recent signals · Thrissur · Round North · 48 hours</h4>
+
+        <div class="review neg">
+          <div class="when">2h · ML</div>
+          <div class="text">"<strong>ഹാൾമാർക്ക് സർട്ടിഫിക്കറ്റ്</strong> എനിക്ക് കാണിച്ചു തന്നില്ല. ചോദിച്ചപ്പോൾ പറഞ്ഞത് അത് ഓൺലൈനിൽ ലഭ്യമാണെന്ന്. എന്നാൽ <em>ഞാൻ കണ്ടെത്താൻ കഴിഞ്ഞില്ല.</em>"<br/><span style="color: var(--bone-3); font-style: normal; font-size: 12px;">"Was not shown the hallmark certificate. When asked, told it was available online — but I could not find it."</span></div>
+          <div class="src">Google · 1★</div>
+        </div>
+
+        <div class="review neg">
+          <div class="when">8h · ML</div>
+          <div class="text">"പില്ലൈ ചേച്ചിയുടെ വീഡിയോ കണ്ടാൽ പിന്നെ ഇവിടെ വരാൻ തോന്നുമോ? എന്റെ മകളുടെ കല്യാണത്തിന് <em>വേറെ കടയിൽ</em> പോകേണ്ടി വരും."<br/><span style="color: var(--bone-3); font-style: normal; font-size: 12px;">"After watching Pillai's video, would anyone want to come here? For my daughter's wedding, I'll have to go to a different shop."</span></div>
+          <div class="src">JustDial · 2★</div>
+        </div>
+
+        <div class="review pos">
+          <div class="when">14h · ML</div>
+          <div class="text">"<strong>ഇരുപത് വർഷമായി</strong> ഞാൻ ഇവിടെ നിന്നാണ് വാങ്ങുന്നത്. ഒരിക്കലും ഹാൾമാർക്കിംഗിൽ പ്രശ്നം ഉണ്ടായിട്ടില്ല."<br/><span style="color: var(--bone-3); font-style: normal; font-size: 12px;">"For twenty years I've been buying here. Never had a hallmarking issue."</span></div>
+          <div class="src">Google · 5★</div>
+        </div>
+
+        <div class="review neg">
+          <div class="when">22h · TA</div>
+          <div class="text">"நகை சான்றிதழ் கேட்டபோது ஊழியர் <em>எரிச்சலாக</em> பதில் சொன்னார். தி.நகர் கிளையில் இது நடக்கக் கூடாது."<br/><span style="color: var(--bone-3); font-style: normal; font-size: 12px;">"When I asked for the certificate, the staff replied irritably. This shouldn't happen at the T. Nagar branch."</span></div>
+          <div class="src">Google · 2★</div>
+        </div>
+
+        <div class="review">
+          <div class="when">36h · EN</div>
+          <div class="text">"Service was fine, but I left feeling I should have asked more questions. Watching the news this week, I'm not sure I'd return."</div>
+          <div class="src">Google · 3★</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT — figures + editorial -->
+    <div class="rail-r">
+      <h4>Thrissur · Round North · 7d</h4>
+
+      <div class="fig">
+        <div class="k">Signal volume</div>
+        <div class="v">312 <span style="font-family: var(--mono); font-size: 12px; color: var(--vermilion-3); margin-left: 6px;">+218%</span></div>
+        <div class="spark">
+          <i style="height: 18%"></i><i style="height: 14%"></i><i style="height: 22%"></i><i style="height: 28%"></i><i style="height: 32%"></i><i style="height: 36%"></i><i style="height: 48%"></i><i class="warm" style="height: 58%"></i><i class="warm" style="height: 72%"></i><i class="warm" style="height: 88%"></i><i class="warm" style="height: 100%"></i>
+        </div>
+      </div>
+
+      <div class="fig">
+        <div class="k">Sentiment · 7d</div>
+        <div class="v neg">−0.58</div>
+        <div class="note">Was +0.12 fourteen days ago. Crossed zero on 21 Apr.</div>
+      </div>
+
+      <div class="fig">
+        <div class="k">Source mix</div>
+        <div class="v small">62% local reviews</div>
+        <div class="note">22% vernacular social · 11% press · 5% walk-in</div>
+      </div>
+
+      <div class="fig">
+        <div class="k">Distance to story</div>
+        <div class="v small">12 km</div>
+        <div class="note">From the Thrissur audit floor referenced in the regional draft.</div>
+      </div>
+
+      <div class="fig">
+        <div class="k">Historical baseline</div>
+        <div class="v small">+0.34 average</div>
+        <div class="note">A decade-long supportive baseline. This week's reading is two standard deviations below.</div>
+      </div>
+
+      <div class="fig" style="border: 0;">
+        <div class="k">Walk-in survey · scheduled</div>
+        <div class="v small">Tomorrow · 11:00 IST</div>
+        <div class="note">Three local-language surveyors will visit the showroom under the Insyt walk-in protocol. Unannounced.</div>
+      </div>
+
+      <div class="editorial">
+        <div class="lab">Insyt's view · Thrissur</div>
+        This is not a signal problem. The reviews are accurate. The certificate-on-request flow at Round North did not survive the volume of yesterday's traffic. A two-day field correction here will move the regional sentiment more than any statement.
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

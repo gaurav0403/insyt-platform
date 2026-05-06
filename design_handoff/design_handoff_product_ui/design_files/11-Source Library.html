@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — The Source Library</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+
+  .chrome { border-bottom: 1px solid var(--slate-edge); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .nav { display: flex; gap: 24px; font-size: 14px; }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .chrome .actor { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .chrome .av { width: 28px; height: 28px; background: var(--vermilion); color: var(--bone); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+
+  .ph { padding: 32px 64px 24px; border-bottom: 2px solid var(--bone); display: flex; justify-content: space-between; align-items: flex-end; }
+  .ph h1 { margin: 0; font-size: 64px; font-weight: 500; line-height: 0.95; letter-spacing: -0.025em; }
+  .ph h1 em { font-style: italic; }
+  .ph h1 .stop { color: var(--vermilion-3); }
+  .ph .deck { font-style: italic; color: var(--bone-2); font-size: 16px; margin-top: 8px; max-width: 640px; }
+  .ph .totals { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); text-align: right; line-height: 1.7; }
+  .ph .totals .v { color: var(--vermilion-3); font-size: 22px; letter-spacing: -0.01em; display: block; }
+
+  /* Filter bar */
+  .filters { padding: 18px 64px; border-bottom: 1px solid var(--slate-edge); display: flex; gap: 28px; flex-wrap: wrap; align-items: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .filters .grp { display: flex; gap: 6px; align-items: center; }
+  .filters .grp .lbl { color: var(--bone-3); margin-right: 6px; }
+  .filters .chip { padding: 5px 10px; border: 1px solid var(--slate-edge); color: var(--bone-2); }
+  .filters .chip.on { background: var(--bone); color: var(--slate); border-color: var(--bone); }
+  .filters .chip.warm { color: var(--vermilion-3); border-color: var(--vermilion-3); }
+
+  /* Body — three columns */
+  .body { display: grid; grid-template-columns: 280px 1fr 360px; min-height: calc(100vh - 240px); }
+  .rail-l { border-right: 1px solid var(--slate-edge); padding: 24px; }
+  .rail-r { border-left: 1px solid var(--slate-edge); padding: 24px; }
+  .center { padding: 24px 32px; }
+
+  /* LEFT — taxonomy */
+  .rail-l h4 { margin: 0 0 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); padding-bottom: 12px; border-bottom: 2px solid var(--bone); font-weight: 500; }
+  .tax { padding: 10px 0; border-bottom: 1px solid var(--slate-edge); display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+  .tax.indent { padding-left: 16px; font-size: 12px; color: var(--bone-2); }
+  .tax.active { color: var(--vermilion-3); }
+  .tax .ct { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--bone-3); }
+
+  /* CENTER — directory */
+  .dir-h { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; border-bottom: 2px solid var(--bone); margin-bottom: 12px; }
+  .dir-h h3 { margin: 0; font-size: 22px; font-weight: 500; letter-spacing: -0.012em; }
+  .dir-h h3 em { font-style: italic; }
+  .dir-h .scope { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .dir-h .scope .v { color: var(--bone); }
+
+  /* Column headers */
+  .colhdr { display: grid; grid-template-columns: 1.6fr 70px 90px 90px 70px 70px 1fr; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--slate-edge); font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .colhdr div { text-align: right; }
+  .colhdr .nm { text-align: left; }
+
+  .row { display: grid; grid-template-columns: 1.6fr 70px 90px 90px 70px 70px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--slate-edge); align-items: center; font-size: 13px; }
+  .row .src { display: flex; flex-direction: column; gap: 2px; }
+  .row .src .nm { font-weight: 500; letter-spacing: -0.005em; font-size: 14px; }
+  .row .src .nm em { color: var(--bone-3); font-size: 11px; font-style: italic; margin-left: 6px; }
+  .row .src .where { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .row .lang { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--bone-2); text-align: right; }
+  .row .grav { font-family: var(--mono); font-size: 14px; font-weight: 500; text-align: right; letter-spacing: -0.01em; }
+  .row .grav.hi { color: var(--bone); }
+  .row .grav.mid { color: var(--bone-2); }
+  .row .grav.lo { color: var(--bone-3); }
+  .row .read { font-family: var(--mono); font-size: 11px; text-align: right; color: var(--bone-2); letter-spacing: 0.04em; }
+  .row .freq { font-family: var(--mono); font-size: 11px; text-align: right; color: var(--bone-3); letter-spacing: 0.04em; }
+  .row .sent { display: flex; gap: 1px; height: 18px; align-items: stretch; justify-content: flex-end; }
+  .row .sent i { width: 4px; background: var(--bone-4); }
+  .row .sent i.pos { background: var(--positive); }
+  .row .sent i.neg { background: var(--vermilion-3); }
+  .row .sent i.neu { background: var(--bone-3); }
+  .row .last { font-family: var(--mono); font-size: 10px; color: var(--bone-3); letter-spacing: 0.08em; }
+
+  .row.ed { background: var(--slate-2); margin: 0 -32px; padding-left: 32px; padding-right: 32px; border-left: 2px solid var(--vermilion-3); }
+  .row.ed .src .nm em { color: var(--vermilion-3); }
+
+  /* Section dividers */
+  .sec-div {
+    display: flex; align-items: center; gap: 16px;
+    margin: 32px 0 8px;
+    padding-bottom: 8px;
+    border-bottom: 4px double var(--bone-4);
+  }
+  .sec-div h4 { margin: 0; font-size: 18px; font-weight: 500; letter-spacing: -0.01em; }
+  .sec-div h4 em { font-style: italic; color: var(--bone-2); }
+  .sec-div .ct { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); }
+  .sec-div .ln { flex: 1; height: 1px; background: var(--slate-edge); }
+
+  /* RIGHT — focused source profile */
+  .rail-r h4 { margin: 0 0 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); padding-bottom: 12px; border-bottom: 2px solid var(--bone); font-weight: 500; }
+  .focus-h { padding-bottom: 18px; border-bottom: 1px solid var(--slate-edge); margin-bottom: 18px; }
+  .focus-h .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--vermilion-3); margin-bottom: 8px; }
+  .focus-h h3 { margin: 0 0 6px; font-size: 26px; font-weight: 500; letter-spacing: -0.015em; line-height: 1.1; }
+  .focus-h h3 em { font-style: italic; }
+  .focus-h .where { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+
+  .fig { padding: 12px 0; border-bottom: 1px solid var(--slate-edge); display: flex; justify-content: space-between; align-items: baseline; }
+  .fig .k { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .fig .v { font-size: 17px; font-weight: 500; letter-spacing: -0.005em; }
+  .fig .v.pos { color: var(--positive); }
+  .fig .v.neg { color: var(--vermilion-3); }
+
+  .focus-note { margin-top: 18px; padding: 16px; background: var(--slate-2); border-left: 2px solid var(--vermilion-3); font-size: 13px; line-height: 1.55; color: var(--bone-2); font-style: italic; }
+  .focus-note .lab { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--vermilion-3); margin-bottom: 8px; font-style: normal; }
+
+  .focus-mentions { margin-top: 24px; }
+  .focus-mentions h5 { margin: 0 0 12px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); padding-bottom: 8px; border-bottom: 1px solid var(--slate-edge); font-weight: 500; }
+  .focus-mention { padding: 10px 0; border-bottom: 1px solid var(--slate-edge); font-size: 12px; line-height: 1.5; }
+  .focus-mention .when { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--bone-3); margin-bottom: 4px; }
+  .focus-mention .body-m { color: var(--bone-2); font-style: italic; }
+</style>
+</head>
+<body class="on-slate">
+<div class="app">
+
+  <!-- Chrome -->
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark" style="font-size: 22px;">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a>Daily</a><a>Narrative</a><a>Replay</a><a>Drafts</a><a>Regional</a><a>Ground</a><a>People</a><a class="active">Sources</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">Library · 4,212 active sources</span>
+      <span class="meta">14 languages · 26 states</span>
+      <div class="actor"><div class="av">RK</div><span style="color: var(--bone-2);">Ramesh K.</span></div>
+    </div>
+  </div>
+
+  <!-- Page head -->
+  <div class="ph">
+    <div>
+      <h1>The source <em>library<span class="stop">.</span></em></h1>
+      <div class="deck">Every source the platform reads, presented as an editorial directory. Source gravity is composite — historical accuracy, audience trust, propagation index. Sources are ranked, not weighted by traffic.</div>
+    </div>
+    <div class="totals">
+      <span>Active sources</span><span class="v">4,212</span>
+      <span>Editor reviewed</span><span class="v" style="color: var(--bone);">812</span>
+      <span>Avg gravity</span><span class="v" style="color: var(--bone-2);">6.8 / 10</span>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="grp"><span class="lbl">Tier</span><span class="chip on">All</span><span class="chip">A · ★★★</span><span class="chip">B · ★★</span><span class="chip">C · ★</span></div>
+    <div class="grp"><span class="lbl">Medium</span><span class="chip on">Print</span><span class="chip on">Broadcast</span><span class="chip on">Digital</span><span class="chip on">YouTube</span><span class="chip on">X / Twitter</span><span class="chip on">Instagram</span><span class="chip">Reddit</span><span class="chip">Telegram</span><span class="chip">WhatsApp</span></div>
+    <div class="grp"><span class="lbl">Language</span><span class="chip on">EN</span><span class="chip on">ML</span><span class="chip on">TA</span><span class="chip">+11</span></div>
+    <div class="grp"><span class="lbl">Sentiment to brand</span><span class="chip">Supportive</span><span class="chip">Steady</span><span class="chip warm">Adversarial</span></div>
+    <div class="grp"><span class="lbl">Theme</span><span class="chip warm">Hallmarking</span></div>
+  </div>
+
+  <div class="body">
+
+    <!-- LEFT — taxonomy -->
+    <div class="rail-l">
+      <h4>By desk · 4,212</h4>
+      <div class="tax"><span>National English press</span><span class="ct">218</span></div>
+      <div class="tax"><span>Business &amp; trade</span><span class="ct">186</span></div>
+      <div class="tax active"><span>Vernacular print</span><span class="ct">488</span></div>
+      <div class="tax indent"><span>Malayalam</span><span class="ct">96</span></div>
+      <div class="tax indent"><span>Tamil</span><span class="ct">112</span></div>
+      <div class="tax indent"><span>Hindi</span><span class="ct">128</span></div>
+      <div class="tax indent"><span>+ 9 languages</span><span class="ct">152</span></div>
+      <div class="tax"><span>Vernacular broadcast</span><span class="ct">312</span></div>
+      <div class="tax"><span>Independent / YouTube</span><span class="ct">624</span></div>
+      <div class="tax"><span>Social · real-time</span><span class="ct">812</span></div>
+      <div class="tax indent"><span>X / Twitter</span><span class="ct">186</span></div>
+      <div class="tax indent"><span>Instagram</span><span class="ct">240</span></div>
+      <div class="tax indent"><span>Reddit · India subs</span><span class="ct">42</span></div>
+      <div class="tax indent"><span>WhatsApp · public groups</span><span class="ct">218</span></div>
+      <div class="tax indent"><span>Telegram · trade</span><span class="ct">126</span></div>
+      <div class="tax"><span>Local reviews</span><span class="ct">1,148</span></div>
+      <div class="tax"><span>Regulatory &amp; gov.</span><span class="ct">96</span></div>
+      <div class="tax" style="border: 0;"><span>Walk-in surveys</span><span class="ct">218</span></div>
+
+      <h4 style="margin-top: 32px;">Saved views</h4>
+      <div class="tax"><span>· The hallmarking watch</span><span class="ct">74</span></div>
+      <div class="tax"><span>· Tamil Nadu &amp; consumer councils</span><span class="ct">22</span></div>
+      <div class="tax"><span>· Akshaya Tritiya · pre-event</span><span class="ct">38</span></div>
+      <div class="tax"><span>· Forbes-adjacent journalists</span><span class="ct">14</span></div>
+      <div class="tax" style="border: 0;"><span>· The Chairman's voice</span><span class="ct">9</span></div>
+    </div>
+
+    <!-- CENTER — directory -->
+    <div class="center">
+
+      <div class="dir-h">
+        <h3>The directory · <em>everything that touched the hallmarking watch</em>, today</h3>
+        <div class="scope">Showing <span class="v">22 of 4,212</span> · sorted by tier, then gravity</div>
+      </div>
+
+      <div class="colhdr">
+        <div class="nm">Source</div>
+        <div>Lang</div>
+        <div>Gravity</div>
+        <div>Reach · est</div>
+        <div>Read</div>
+        <div>Freq</div>
+        <div>Sentiment · 30d</div>
+      </div>
+
+      <!-- TIER A -->
+      <div class="sec-div"><h4>Tier A · <em>institutionally trusted, regional and national</em></h4><span class="ct">42 sources</span><span class="ln"></span></div>
+
+      <div class="row ed">
+        <div class="src"><span class="nm">Manorama News <em>· editor: V. Menon</em></span><span class="where">Print + broadcast · Kottayam</span></div>
+        <div class="lang">ML</div>
+        <div class="grav hi">9.4</div>
+        <div class="read">2.1M / day</div>
+        <div class="read">★★★</div>
+        <div class="freq">hourly</div>
+        <div class="sent">
+          <i class="neu" style="height: 60%;"></i><i class="pos" style="height: 80%;"></i><i class="pos" style="height: 65%;"></i><i class="neu" style="height: 45%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 30%;"></i><i class="neg" style="height: 40%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 90%;"></i><i class="neg" style="height: 100%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Mathrubhumi</span><span class="where">Print · Kozhikode · 11 editions</span></div>
+        <div class="lang">ML</div>
+        <div class="grav hi">9.2</div>
+        <div class="read">1.6M / day</div>
+        <div class="read">★★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="pos" style="height: 70%;"></i><i class="pos" style="height: 80%;"></i><i class="pos" style="height: 65%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 45%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 30%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Daily Thanthi</span><span class="where">Print · 16 editions · Tamil Nadu</span></div>
+        <div class="lang">TA</div>
+        <div class="grav hi">9.1</div>
+        <div class="read">1.2M / day</div>
+        <div class="read">★★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="pos" style="height: 70%;"></i><i class="pos" style="height: 60%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neu" style="height: 55%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 75%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Asianet News</span><span class="where">Broadcast + digital · Kerala</span></div>
+        <div class="lang">ML</div>
+        <div class="grav hi">8.8</div>
+        <div class="read">~3M reach</div>
+        <div class="read">★★★</div>
+        <div class="freq">hourly</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="pos" style="height: 70%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neg" style="height: 40%;"></i><i class="neg" style="height: 60%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 90%;"></i><i class="neg" style="height: 95%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">The Hindu BusinessLine</span><span class="where">Print + digital · National · biz</span></div>
+        <div class="lang">EN</div>
+        <div class="grav hi">9.0</div>
+        <div class="read">~640k</div>
+        <div class="read">★★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="pos" style="height: 80%;"></i><i class="pos" style="height: 75%;"></i><i class="pos" style="height: 70%;"></i><i class="pos" style="height: 70%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 45%;"></i><i class="neu" style="height: 55%;"></i><i class="pos" style="height: 70%;"></i><i class="pos" style="height: 75%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Forbes India <em>· S. Mathur (signal)</em></span><span class="where">Print + digital · National · biz</span></div>
+        <div class="lang">EN</div>
+        <div class="grav hi">9.4</div>
+        <div class="read">~520k</div>
+        <div class="read">★★★</div>
+        <div class="freq">monthly</div>
+        <div class="sent">
+          <i class="pos" style="height: 75%;"></i><i class="pos" style="height: 80%;"></i><i class="pos" style="height: 65%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="pos" style="height: 70%;"></i><i class="pos" style="height: 75%;"></i><i class="pos" style="height: 78%;"></i><i class="pos" style="height: 82%;"></i><i class="pos" style="height: 85%;"></i>
+        </div>
+      </div>
+
+      <!-- TIER B -->
+      <div class="sec-div"><h4>Tier B · <em>regional regulars, mid-circulation</em></h4><span class="ct">186 sources</span><span class="ln"></span></div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Madhyamam Daily</span><span class="where">Print · Kerala · 9 editions</span></div>
+        <div class="lang">ML</div>
+        <div class="grav mid">7.6</div>
+        <div class="read">~480k</div>
+        <div class="read">★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="neu" style="height: 60%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neu" style="height: 65%;"></i><i class="neg" style="height: 40%;"></i><i class="neg" style="height: 60%;"></i><i class="neg" style="height: 75%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 80%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Dinamalar</span><span class="where">Print · Tamil Nadu · 12 ed.</span></div>
+        <div class="lang">TA</div>
+        <div class="grav mid">7.4</div>
+        <div class="read">~520k</div>
+        <div class="read">★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="pos" style="height: 65%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 60%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neg" style="height: 50%;"></i><i class="neg" style="height: 65%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Reporter TV</span><span class="where">Broadcast · Kerala</span></div>
+        <div class="lang">ML</div>
+        <div class="grav mid">7.0</div>
+        <div class="read">~860k</div>
+        <div class="read">★★</div>
+        <div class="freq">hourly</div>
+        <div class="sent">
+          <i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 45%;"></i><i class="neg" style="height: 60%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 75%;"></i><i class="neg" style="height: 85%;"></i>
+        </div>
+      </div>
+
+      <!-- TIER C -->
+      <div class="sec-div"><h4>Tier C · <em>independent, low-circulation, high-volatility</em></h4><span class="ct">624 sources · use with judgment</span><span class="ln"></span></div>
+
+      <div class="row ed">
+        <div class="src"><span class="nm">Reshma Pillai · YouTube <em>· focus</em></span><span class="where">Independent · investigative</span></div>
+        <div class="lang">ML</div>
+        <div class="grav mid">7.2</div>
+        <div class="read">~412k / video</div>
+        <div class="read">★★</div>
+        <div class="freq">weekly</div>
+        <div class="sent">
+          <i class="neg" style="height: 80%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 60%;"></i><i class="neg" style="height: 75%;"></i><i class="neg" style="height: 65%;"></i><i class="neg" style="height: 90%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 95%;"></i><i class="neg" style="height: 100%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Marunadan Malayali</span><span class="where">Independent · digital · Kochi</span></div>
+        <div class="lang">ML</div>
+        <div class="grav lo">5.8</div>
+        <div class="read">~180k</div>
+        <div class="read">★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 45%;"></i><i class="neg" style="height: 60%;"></i><i class="neg" style="height: 65%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 90%;"></i><i class="neg" style="height: 88%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">JewelryBuzz · TG</span><span class="where">Trade Telegram channel</span></div>
+        <div class="lang">EN/ML</div>
+        <div class="grav lo">4.6</div>
+        <div class="read">~22k subs</div>
+        <div class="read">★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 75%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 65%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 95%;"></i><i class="neg" style="height: 100%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Walk-in surveys · Kerala</span><span class="where">Insyt-collected · 26 surveyors</span></div>
+        <div class="lang">ML</div>
+        <div class="grav mid">8.2</div>
+        <div class="read">156 / month</div>
+        <div class="read">★★★</div>
+        <div class="freq">monthly</div>
+        <div class="sent">
+          <i class="pos" style="height: 70%;"></i><i class="pos" style="height: 65%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neg" style="height: 65%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 90%;"></i><i class="neg" style="height: 95%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Google reviews · Kerala showrooms</span><span class="where">Aggregated · 218 locations</span></div>
+        <div class="lang">ML/EN</div>
+        <div class="grav mid">7.8</div>
+        <div class="read">~1,400 / mo</div>
+        <div class="read">★★★</div>
+        <div class="freq">live</div>
+        <div class="sent">
+          <i class="pos" style="height: 70%;"></i><i class="pos" style="height: 65%;"></i><i class="pos" style="height: 60%;"></i><i class="pos" style="height: 65%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 55%;"></i><i class="neg" style="height: 75%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 95%;"></i><i class="neg" style="height: 100%;"></i>
+        </div>
+      </div>
+
+      <!-- TIER D — SOCIAL -->
+      <div class="sec-div"><h4>Tier D · <em>social, real-time — read for velocity, not for truth</em></h4><span class="ct">812 sources · sampled</span><span class="ln"></span></div>
+
+      <div class="row ed">
+        <div class="src"><span class="nm">X / Twitter · #hallmarking <em>· trending in IN-KL</em></span><span class="where">Live conversation · 14 named voices tracked</span></div>
+        <div class="lang">ML/EN</div>
+        <div class="grav hi">8.6</div>
+        <div class="read">~28k posts / 24h</div>
+        <div class="read">★★★</div>
+        <div class="freq">live</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 60%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 75%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 95%;"></i><i class="neg" style="height: 100%;"></i><i class="neg" style="height: 98%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">@anandmahindra <em>· quoted Pillai · 24 Apr</em></span><span class="where">X · 11.2M followers · IN biz voice</span></div>
+        <div class="lang">EN</div>
+        <div class="grav hi">9.0</div>
+        <div class="read">11.2M reach</div>
+        <div class="read">★★★</div>
+        <div class="freq">irregular</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 90%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">@faye_dsouza</span><span class="where">X · 2.1M · independent journalist</span></div>
+        <div class="lang">EN</div>
+        <div class="grav hi">8.2</div>
+        <div class="read">2.1M followers</div>
+        <div class="read">★★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 60%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 90%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Instagram · #goldjewellery <em>· IN</em></span><span class="where">Hashtag stream · 218 named accounts</span></div>
+        <div class="lang">ML/TA/EN</div>
+        <div class="grav mid">7.4</div>
+        <div class="read">~62k posts / wk</div>
+        <div class="read">★★</div>
+        <div class="freq">live</div>
+        <div class="sent">
+          <i class="pos" style="height: 80%;"></i><i class="pos" style="height: 75%;"></i><i class="pos" style="height: 70%;"></i><i class="pos" style="height: 70%;"></i><i class="pos" style="height: 65%;"></i><i class="pos" style="height: 65%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">@kalyanjewellers_official</span><span class="where">Instagram · own channel · 1.4M followers</span></div>
+        <div class="lang">EN/ML</div>
+        <div class="grav hi">8.4</div>
+        <div class="read">1.4M followers</div>
+        <div class="read">★★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="pos" style="height: 75%;"></i><i class="pos" style="height: 80%;"></i><i class="pos" style="height: 78%;"></i><i class="pos" style="height: 82%;"></i><i class="pos" style="height: 75%;"></i><i class="pos" style="height: 70%;"></i><i class="pos" style="height: 75%;"></i><i class="neu" style="height: 60%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">Instagram · comment streams <em>· own posts</em></span><span class="where">Aggregated · 480 posts · 90 days</span></div>
+        <div class="lang">ML/TA/EN</div>
+        <div class="grav mid">7.0</div>
+        <div class="read">~12k / month</div>
+        <div class="read">★★</div>
+        <div class="freq">live</div>
+        <div class="sent">
+          <i class="pos" style="height: 70%;"></i><i class="pos" style="height: 65%;"></i><i class="pos" style="height: 60%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 55%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 92%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">r/india · r/Kerala · r/IndiaInvestments</span><span class="where">Reddit · 8 subs sampled · long-form</span></div>
+        <div class="lang">EN</div>
+        <div class="grav mid">6.8</div>
+        <div class="read">~340 threads / mo</div>
+        <div class="read">★★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 60%;"></i><i class="neg" style="height: 75%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 88%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">JewelryBuzz · Telegram</span><span class="where">Trade channel · Kochi · operator chatter</span></div>
+        <div class="lang">EN/ML</div>
+        <div class="grav lo">4.6</div>
+        <div class="read">~22k subs</div>
+        <div class="read">★</div>
+        <div class="freq">daily</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neg" style="height: 70%;"></i><i class="neg" style="height: 75%;"></i><i class="neu" style="height: 50%;"></i><i class="neg" style="height: 65%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 85%;"></i><i class="neg" style="height: 95%;"></i><i class="neg" style="height: 100%;"></i>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="src"><span class="nm">WhatsApp · public groups <em>· Kerala trade</em></span><span class="where">22 groups · sampled · ethical-only</span></div>
+        <div class="lang">ML</div>
+        <div class="grav lo">5.2</div>
+        <div class="read">~4,200 members</div>
+        <div class="read">★</div>
+        <div class="freq">live</div>
+        <div class="sent">
+          <i class="neu" style="height: 50%;"></i><i class="neu" style="height: 55%;"></i><i class="neu" style="height: 50%;"></i><i class="neu" style="height: 60%;"></i><i class="neg" style="height: 65%;"></i><i class="neg" style="height: 75%;"></i><i class="neg" style="height: 80%;"></i><i class="neg" style="height: 90%;"></i><i class="neg" style="height: 95%;"></i><i class="neg" style="height: 98%;"></i>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT — focused source profile -->
+    <div class="rail-r">
+      <h4>Source · in focus</h4>
+
+      <div class="focus-h">
+        <div class="lbl">Tier C · independent · investigative</div>
+        <h3>Reshma <em>Pillai</em></h3>
+        <div class="where">YouTube · Malayalam · est. 2022 · Kochi-based</div>
+      </div>
+
+      <div class="fig"><span class="k">Source gravity</span><span class="v">7.2 / 10</span></div>
+      <div class="fig"><span class="k">Subscribers</span><span class="v">412k</span></div>
+      <div class="fig"><span class="k">Median views</span><span class="v">~218k / vid</span></div>
+      <div class="fig"><span class="k">Cadence</span><span class="v">~1 video / wk</span></div>
+      <div class="fig"><span class="k">Historical accuracy</span><span class="v pos">0.82</span></div>
+      <div class="fig"><span class="k">Audience trust · ML</span><span class="v pos">High</span></div>
+      <div class="fig"><span class="k">Crossover history</span><span class="v">3 of 14 → EN press</span></div>
+      <div class="fig"><span class="k">Sentiment to brand</span><span class="v neg">−0.78</span></div>
+      <div class="fig" style="border: 0;"><span class="k">Last appeared</span><span class="v">24 Apr · 18:42</span></div>
+
+      <div class="focus-note">
+        <div class="lab">Editor's note · V. Menon</div>
+        Pillai's reporting has been factually accurate in all but one prior instance (corrected within 72 hours, on-air). Treat as adversarial-but-credible. Her register is moralist, not partisan; rebuttals that argue compliance read as defensive. Concession-then-correction works.
+      </div>
+
+      <div class="focus-mentions">
+        <h5>Recent appearances · 30 days</h5>
+        <div class="focus-mention">
+          <div class="when">24 Apr · 18:42</div>
+          <div class="body-m">"Hallmark, halfmark, no mark — Kerala's jewellers" · 14 min · 412k</div>
+        </div>
+        <div class="focus-mention">
+          <div class="when">11 Apr</div>
+          <div class="body-m">"BIS audit floor — what does a fourth stage mean?" · 9 min · 188k</div>
+        </div>
+        <div class="focus-mention">
+          <div class="when">04 Apr</div>
+          <div class="body-m">"Akshaya Tritiya — pricing across five chains" · 11 min · 240k</div>
+        </div>
+        <div class="focus-mention" style="border: 0;">
+          <div class="when">28 Mar</div>
+          <div class="body-m">"Why receipts matter in Kerala jewellery" · 8 min · 162k</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

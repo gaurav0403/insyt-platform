@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — Narrative Exploration</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+
+  .chrome {
+    border-bottom: 1px solid var(--slate-edge);
+    padding: 14px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .nav { display: flex; gap: 24px; font-size: 14px; }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .chrome .actor { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .chrome .av { width: 28px; height: 28px; background: var(--vermilion); color: var(--bone); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+
+  /* Page header */
+  .ph {
+    padding: 32px 64px 24px;
+    border-bottom: 2px solid var(--bone);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .ph h1 {
+    margin: 0;
+    font-size: 64px;
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+  }
+  .ph h1 em { font-style: italic; }
+  .ph h1 .stop { color: var(--vermilion-3); }
+  .ph .deck {
+    font-style: italic;
+    color: var(--bone-2);
+    font-size: 16px;
+    margin-top: 8px;
+    max-width: 600px;
+  }
+  .ph .controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .ph .pill {
+    border: 1px solid var(--slate-edge);
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--bone-2);
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+  }
+  .ph .pill.active { background: var(--bone); color: var(--slate); border-color: var(--bone); }
+
+  /* Page body */
+  .body {
+    padding: 32px 64px 80px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+  }
+
+  /* Left rail — themes */
+  .rail h4 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin: 0 0 16px;
+    font-weight: 500;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--bone);
+  }
+  .theme {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--slate-edge);
+    cursor: pointer;
+  }
+  .theme.active {
+    background: var(--slate-2);
+    margin: 0 -16px;
+    padding: 14px 16px;
+    border-left: 2px solid var(--vermilion-3);
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .theme .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .theme .name {
+    font-size: 15px; font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .theme .vol {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--bone-3); letter-spacing: 0.04em;
+  }
+  .theme .meta {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3);
+    display: flex; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .theme .meta .neg { color: var(--vermilion-3); }
+  .theme .meta .pos { color: var(--positive); }
+  .theme .spark { display: flex; align-items: flex-end; gap: 1px; height: 24px; }
+  .theme .spark i { flex: 1; background: var(--bone-4); }
+  .theme .spark i.warm { background: var(--vermilion-3); }
+  .theme .spark i.cool { background: var(--positive); }
+
+  /* Main canvas */
+  .canvas {}
+
+  .story-head {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--slate-edge);
+    margin-bottom: 32px;
+  }
+  .story-head .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--vermilion-3);
+    margin-bottom: 16px;
+  }
+  .story-head h2 {
+    margin: 0 0 16px;
+    font-size: 56px;
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+  .story-head h2 em { font-style: italic; }
+  .story-head .stand {
+    font-size: 20px;
+    line-height: 1.45;
+    color: var(--bone-2);
+    font-style: italic;
+    max-width: 720px;
+  }
+  .story-head .figs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-self: flex-start;
+  }
+  .fig {
+    border-top: 1px solid var(--slate-edge);
+    padding-top: 12px;
+  }
+  .fig .k {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-bottom: 6px;
+  }
+  .fig .v { font-size: 24px; font-weight: 500; letter-spacing: -0.015em; }
+  .fig .v.neg { color: var(--vermilion-3); }
+  .fig .note { font-size: 12px; color: var(--bone-3); font-style: italic; margin-top: 4px; line-height: 1.4; }
+
+  /* The arc — the chart */
+  .arc {
+    margin-bottom: 40px;
+  }
+  .arc .label-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 16px;
+  }
+  .arc h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .arc .legend {
+    display: flex; gap: 20px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .arc .legend .sw {
+    display: inline-block; width: 12px; height: 8px;
+    margin-right: 6px; vertical-align: middle;
+  }
+  .arc-canvas {
+    height: 360px;
+    border-top: 1px solid var(--slate-edge);
+    border-bottom: 1px solid var(--slate-edge);
+    position: relative;
+    padding: 16px 0;
+  }
+  .arc-canvas svg { width: 100%; height: 100%; display: block; }
+  .arc-axis {
+    display: flex; justify-content: space-between;
+    margin-top: 10px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--bone-3);
+  }
+
+  /* Annotations on the arc */
+  .annotations {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .ann {
+    border-top: 2px solid var(--vermilion-3);
+    padding-top: 12px;
+  }
+  .ann .when {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--vermilion-3); margin-bottom: 8px;
+  }
+  .ann h5 {
+    margin: 0 0 6px;
+    font-size: 15px; font-weight: 500;
+    letter-spacing: -0.005em; line-height: 1.2;
+  }
+  .ann p {
+    margin: 0;
+    font-size: 12px; line-height: 1.5;
+    color: var(--bone-3); font-style: italic;
+  }
+
+  /* Source gravity / share-of-narrative */
+  .twocol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    margin-top: 48px;
+  }
+  .panel h3 {
+    margin: 0 0 16px;
+    font-size: 22px; font-weight: 500;
+    letter-spacing: -0.01em;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--bone);
+  }
+  .panel .deck {
+    font-size: 14px; color: var(--bone-2);
+    font-style: italic; margin-bottom: 20px;
+    line-height: 1.5; max-width: 480px;
+  }
+
+  /* Competitor share rows */
+  .share-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 80px;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .share-row .name { font-size: 15px; font-weight: 500; letter-spacing: -0.005em; }
+  .share-row .name.you { color: var(--vermilion-3); }
+  .share-row .bar {
+    height: 18px;
+    background: var(--slate-2);
+    position: relative;
+  }
+  .share-row .bar .fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--bone-3);
+  }
+  .share-row .bar .fill.you { background: var(--vermilion-3); }
+  .share-row .bar .pos {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--positive); opacity: 0.5;
+  }
+  .share-row .v {
+    font-family: var(--mono); font-size: 13px;
+    text-align: right;
+    color: var(--bone-2); letter-spacing: 0.02em;
+  }
+
+  /* Source list */
+  .src-list .src {
+    display: grid;
+    grid-template-columns: 1fr 80px 80px;
+    gap: 16px;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .src-list .src .nm { font-size: 14px; }
+  .src-list .src .nm em { color: var(--bone-3); font-size: 11px; font-style: italic; margin-left: 8px; }
+  .src-list .src .grav {
+    font-family: var(--mono); font-size: 13px;
+    color: var(--bone);
+    text-align: right;
+  }
+  .src-list .src .sent {
+    font-family: var(--mono); font-size: 13px;
+    text-align: right;
+  }
+  .src-list .src .sent.neg { color: var(--vermilion-3); }
+  .src-list .src .sent.pos { color: var(--positive); }
+  .src-list .src .sent.neu { color: var(--bone-3); }
+
+  .editorial {
+    margin-top: 48px;
+    padding: 32px;
+    background: var(--slate-2);
+    border: 1px solid var(--slate-edge);
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 32px;
+  }
+  .editorial .lab {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--vermilion-3);
+  }
+  .editorial p {
+    margin: 0 0 12px;
+    font-size: 17px; line-height: 1.55;
+    color: var(--bone);
+    font-style: italic;
+    max-width: 700px;
+  }
+  .editorial p:last-child { margin: 0; }
+</style>
+</head>
+<body class="on-slate">
+<div class="app">
+
+  <!-- Chrome -->
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark" style="font-size: 22px;">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a>Daily</a>
+        <a class="active">Narrative</a>
+        <a>Replay</a>
+        <a>Drafts</a>
+        <a>Regional</a>
+        <a>Ground</a>
+        <a>People</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">Window: 90 days · ending 25 Apr 2026</span>
+      <span class="meta">Comparing: Kalyan + 4 competitors</span>
+      <div class="actor"><div class="av">RK</div><span style="color: var(--bone-2);">Ramesh K.</span></div>
+    </div>
+  </div>
+
+  <!-- Page head -->
+  <div class="ph">
+    <div>
+      <h1>Narrative <em>exploration<span class="stop">.</span></em></h1>
+      <div class="deck">The arcs forming around your brand. Themes over weeks. Where you are winning the story, and where you are losing it.</div>
+    </div>
+    <div class="controls">
+      <span class="pill">7d</span>
+      <span class="pill">30d</span>
+      <span class="pill active">90d</span>
+      <span class="pill">12m</span>
+      <span class="pill">All</span>
+      <span class="pill" style="margin-left: 16px;">Compare ↗</span>
+      <span class="pill">Export ↗</span>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- LEFT RAIL — themes -->
+    <div class="rail">
+      <h4>Themes · 90 days</h4>
+
+      <div class="theme active">
+        <div class="row"><span class="name">Hallmarking compliance</span><span class="vol">2,184</span></div>
+        <div class="meta"><span class="neg">−0.62</span><span>Rising</span><span>Sev 3</span></div>
+        <div class="spark">
+          <i style="height: 12%"></i><i style="height: 18%"></i><i style="height: 16%"></i><i style="height: 22%"></i><i style="height: 28%"></i><i style="height: 24%"></i><i style="height: 36%"></i><i style="height: 42%"></i><i style="height: 38%"></i><i style="height: 48%"></i><i style="height: 54%"></i><i style="height: 64%"></i><i style="height: 78%"></i><i class="warm" style="height: 100%"></i>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="row"><span class="name">Akshaya Tritiya readiness</span><span class="vol">1,402</span></div>
+        <div class="meta"><span class="pos">+0.34</span><span>Rising</span><span>Sev 1</span></div>
+        <div class="spark">
+          <i style="height: 14%"></i><i style="height: 12%"></i><i style="height: 18%"></i><i style="height: 22%"></i><i style="height: 28%"></i><i style="height: 36%"></i><i style="height: 44%"></i><i style="height: 56%"></i><i style="height: 62%"></i><i style="height: 70%"></i><i class="cool" style="height: 78%"></i><i class="cool" style="height: 84%"></i><i class="cool" style="height: 92%"></i><i class="cool" style="height: 100%"></i>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="row"><span class="name">Gold-price commentary</span><span class="vol">1,184</span></div>
+        <div class="meta"><span style="color: var(--bone-3);">−0.04</span><span>Steady</span><span>Sev 1</span></div>
+        <div class="spark">
+          <i style="height: 56%"></i><i style="height: 62%"></i><i style="height: 48%"></i><i style="height: 54%"></i><i style="height: 64%"></i><i style="height: 58%"></i><i style="height: 70%"></i><i style="height: 64%"></i><i style="height: 58%"></i><i style="height: 66%"></i><i style="height: 60%"></i><i style="height: 72%"></i><i style="height: 64%"></i><i style="height: 68%"></i>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="row"><span class="name">Showroom experience · Tier-2</span><span class="vol">812</span></div>
+        <div class="meta"><span class="neg">−0.28</span><span>Rising</span><span>Sev 2</span></div>
+        <div class="spark">
+          <i style="height: 22%"></i><i style="height: 18%"></i><i style="height: 24%"></i><i style="height: 22%"></i><i style="height: 28%"></i><i style="height: 24%"></i><i style="height: 32%"></i><i style="height: 38%"></i><i style="height: 44%"></i><i style="height: 52%"></i><i style="height: 56%"></i><i style="height: 64%"></i><i class="warm" style="height: 72%"></i><i class="warm" style="height: 80%"></i>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="row"><span class="name">Candere · digital sub-brand</span><span class="vol">624</span></div>
+        <div class="meta"><span class="pos">+0.18</span><span>Steady</span><span>Sev 1</span></div>
+        <div class="spark">
+          <i style="height: 38%"></i><i style="height: 44%"></i><i style="height: 42%"></i><i style="height: 48%"></i><i style="height: 52%"></i><i style="height: 46%"></i><i style="height: 54%"></i><i style="height: 50%"></i><i style="height: 56%"></i><i style="height: 52%"></i><i class="cool" style="height: 58%"></i><i style="height: 54%"></i><i class="cool" style="height: 62%"></i><i class="cool" style="height: 60%"></i>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="row"><span class="name">Wedding-season demand</span><span class="vol">488</span></div>
+        <div class="meta"><span class="pos">+0.42</span><span>Cyclical</span><span>Sev 1</span></div>
+        <div class="spark">
+          <i style="height: 28%"></i><i style="height: 34%"></i><i style="height: 42%"></i><i style="height: 56%"></i><i style="height: 64%"></i><i style="height: 76%"></i><i style="height: 88%"></i><i class="cool" style="height: 92%"></i><i style="height: 78%"></i><i style="height: 64%"></i><i style="height: 48%"></i><i style="height: 38%"></i><i style="height: 32%"></i><i style="height: 28%"></i>
+        </div>
+      </div>
+
+      <div class="theme">
+        <div class="row"><span class="name">CEO · public profile</span><span class="vol">312</span></div>
+        <div class="meta"><span class="pos">+0.56</span><span>Steady</span><span>Sev 1</span></div>
+        <div class="spark">
+          <i style="height: 32%"></i><i style="height: 38%"></i><i style="height: 36%"></i><i style="height: 42%"></i><i style="height: 38%"></i><i style="height: 44%"></i><i style="height: 42%"></i><i style="height: 48%"></i><i style="height: 46%"></i><i style="height: 50%"></i><i class="cool" style="height: 52%"></i><i style="height: 48%"></i><i class="cool" style="height: 54%"></i><i class="cool" style="height: 56%"></i>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px;">
+        <div class="t-label" style="color: var(--bone-3); margin-bottom: 8px;">+ Add a theme</div>
+        <input style="width: 100%; padding: 8px; background: var(--slate-2); border: 1px solid var(--slate-edge); color: var(--bone-2); font-family: var(--serif); font-size: 13px;" placeholder="e.g. 'lab-grown diamonds'" />
+      </div>
+    </div>
+
+    <!-- MAIN CANVAS -->
+    <div class="canvas">
+
+      <div class="story-head">
+        <div>
+          <div class="lbl">Theme · 90 days · Hallmarking compliance</div>
+          <h2>The hallmarking story has been forming for <em>seven&nbsp;weeks</em>.</h2>
+          <div class="stand">A theme that began in March as a regulatory footnote has, over the past 90 days, become the gravitational center of public discussion about regional jewellers — culminating in last night's Pillai segment.</div>
+        </div>
+        <div class="figs">
+          <div class="fig">
+            <div class="k">Total mentions · 90d</div>
+            <div class="v">14,802</div>
+            <div class="note">Across all language sources</div>
+          </div>
+          <div class="fig">
+            <div class="k">Sentiment · current</div>
+            <div class="v neg">−0.62</div>
+            <div class="note">Was −0.04 ninety days ago</div>
+          </div>
+          <div class="fig">
+            <div class="k">Share of voice</div>
+            <div class="v">28.4%</div>
+            <div class="note">You vs. competitors</div>
+          </div>
+          <div class="fig">
+            <div class="k">Source gravity</div>
+            <div class="v">7.4 / 10</div>
+            <div class="note">Weighted by reach &amp; trust</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- The arc -->
+      <div class="arc">
+        <div class="label-row">
+          <h3>The arc · sentiment + volume, 90 days</h3>
+          <div class="legend">
+            <span><span class="sw" style="background: var(--vermilion-3);"></span>Adversarial</span>
+            <span><span class="sw" style="background: var(--bone-3);"></span>Neutral</span>
+            <span><span class="sw" style="background: var(--positive);"></span>Supportive</span>
+            <span><span class="sw" style="background: var(--bone); height: 2px; margin-top: 3px;"></span>Volume</span>
+          </div>
+        </div>
+
+        <div class="arc-canvas">
+          <svg viewBox="0 0 1100 320" preserveAspectRatio="none">
+            <!-- horizontal grid -->
+            <line x1="0" y1="80"  x2="1100" y2="80"  stroke="#2A261E" stroke-width="1"/>
+            <line x1="0" y1="160" x2="1100" y2="160" stroke="#2A261E" stroke-width="1" stroke-dasharray="2 4"/>
+            <line x1="0" y1="240" x2="1100" y2="240" stroke="#2A261E" stroke-width="1"/>
+
+            <!-- y-axis label markers -->
+            <text x="6" y="76" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">+1.0</text>
+            <text x="6" y="156" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">  0</text>
+            <text x="6" y="236" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">−1.0</text>
+
+            <!-- volume area underneath (bone) -->
+            <path d="M0,260 L40,256 L80,254 L120,250 L160,248 L200,246 L240,244 L280,240 L320,238 L360,234 L400,228 L440,224 L480,218 L520,212 L560,208 L600,200 L640,192 L680,184 L720,172 L760,160 L800,148 L840,134 L880,118 L920,100 L960,80 L1000,58 L1040,40 L1080,28 L1100,22 L1100,320 L0,320 Z" fill="#1E1B15"/>
+
+            <!-- sentiment ribbon -->
+            <!-- starts neutral, climbs slightly positive in feb, goes negative in late march, deeply negative now -->
+            <path d="M0,170 L40,168 L80,162 L120,156 L160,150 L200,142 L240,144 L280,148 L320,152 L360,160 L400,166 L440,178 L480,190 L520,200 L560,212 L600,222 L640,232 L680,236 L720,234 L760,228 L800,224 L840,232 L880,244 L920,256 L960,266 L1000,272 L1040,276 L1080,280 L1100,282" fill="none" stroke="#E85543" stroke-width="2.5"/>
+
+            <!-- markers along ribbon -->
+            <circle cx="200" cy="142" r="3" fill="#5A6B3F"/>
+            <circle cx="440" cy="178" r="3" fill="#7A7263"/>
+            <circle cx="760" cy="228" r="3" fill="#E85543"/>
+            <circle cx="1080" cy="280" r="4" fill="#E85543"/>
+
+            <!-- annotation lines -->
+            <line x1="200" y1="142" x2="200" y2="20" stroke="#7A7263" stroke-dasharray="2 3" stroke-width="1"/>
+            <line x1="440" y1="178" x2="440" y2="20" stroke="#7A7263" stroke-dasharray="2 3" stroke-width="1"/>
+            <line x1="760" y1="228" x2="760" y2="20" stroke="#E85543" stroke-dasharray="2 3" stroke-width="1"/>
+            <line x1="1080" y1="280" x2="1080" y2="20" stroke="#E85543" stroke-dasharray="2 3" stroke-width="1"/>
+
+            <text x="206" y="16" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">A</text>
+            <text x="446" y="16" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">B</text>
+            <text x="766" y="16" font-family="JetBrains Mono" font-size="9" fill="#E85543" letter-spacing="1">C</text>
+            <text x="1086" y="16" font-family="JetBrains Mono" font-size="9" fill="#E85543" letter-spacing="1">D</text>
+          </svg>
+        </div>
+
+        <div class="arc-axis">
+          <span>27 Jan</span><span>10 Feb</span><span>24 Feb</span><span>10 Mar</span><span>24 Mar</span><span>07 Apr</span><span>21 Apr</span><span>25 Apr</span>
+        </div>
+
+        <div class="annotations">
+          <div class="ann">
+            <div class="when">A · 14 Feb</div>
+            <h5>BIS issues circular on hallmarking enforcement.</h5>
+            <p>Treated as a regulatory footnote in trade press. No public discussion.</p>
+          </div>
+          <div class="ann">
+            <div class="when">B · 18 Mar</div>
+            <h5>Tanishq publishes audit white-paper.</h5>
+            <p>Reframes the question from compliance to consumer trust. Discussion turns.</p>
+          </div>
+          <div class="ann">
+            <div class="when">C · 09 Apr</div>
+            <h5>First adversarial coverage in <em>Mathrubhumi</em>.</h5>
+            <p>A 600-word column references "regional chains" without naming. Sentiment crosses zero.</p>
+          </div>
+          <div class="ann">
+            <div class="when">D · 24 Apr</div>
+            <h5>Pillai segment names Kalyan twice.</h5>
+            <p>The arc reaches its current peak. The story is no longer abstract.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-column: share of narrative + source gravity -->
+      <div class="twocol">
+        <div class="panel">
+          <h3>Share of the narrative</h3>
+          <div class="deck">Whose name attaches to the story, in the language of the audience that matters. Vermilion is yours. Bars to the right are positive sentiment.</div>
+
+          <div class="share-row">
+            <div class="name you">Kalyan Jewellers</div>
+            <div class="bar"><div class="fill you" style="width: 38%;"></div><div class="pos" style="width: 14%;"></div></div>
+            <div class="v">38.2%</div>
+          </div>
+          <div class="share-row">
+            <div class="name">Tanishq</div>
+            <div class="bar"><div class="fill" style="width: 26%;"></div><div class="pos" style="width: 22%;"></div></div>
+            <div class="v">26.4%</div>
+          </div>
+          <div class="share-row">
+            <div class="name">Malabar Gold</div>
+            <div class="bar"><div class="fill" style="width: 18%;"></div><div class="pos" style="width: 8%;"></div></div>
+            <div class="v">18.1%</div>
+          </div>
+          <div class="share-row">
+            <div class="name">Joyalukkas</div>
+            <div class="bar"><div class="fill" style="width: 11%;"></div><div class="pos" style="width: 4%;"></div></div>
+            <div class="v">11.0%</div>
+          </div>
+          <div class="share-row">
+            <div class="name">Senco Gold</div>
+            <div class="bar"><div class="fill" style="width: 6%;"></div><div class="pos" style="width: 3%;"></div></div>
+            <div class="v">6.3%</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Source gravity</h3>
+          <div class="deck">Not all sources weigh the same. Gravity combines reach, trust, and historical signal-to-print conversion. Sentiment is per-source.</div>
+
+          <div class="src-list">
+            <div class="src"><div class="nm">Reshma Pillai · YouTube <em>Independent · Kerala</em></div><div class="grav">9.1</div><div class="sent neg">−0.81</div></div>
+            <div class="src"><div class="nm">Mathrubhumi <em>Print · Kerala</em></div><div class="grav">8.7</div><div class="sent neg">−0.34</div></div>
+            <div class="src"><div class="nm">Malayala Manorama <em>Print · Kerala</em></div><div class="grav">8.6</div><div class="sent neu">−0.08</div></div>
+            <div class="src"><div class="nm">Mint <em>Print · National</em></div><div class="grav">8.4</div><div class="sent neu">+0.02</div></div>
+            <div class="src"><div class="nm">Economic Times <em>Print · National</em></div><div class="grav">8.2</div><div class="sent pos">+0.18</div></div>
+            <div class="src"><div class="nm">The Hindu BusinessLine <em>Print</em></div><div class="grav">7.8</div><div class="sent neu">+0.04</div></div>
+            <div class="src"><div class="nm">MoneyControl <em>Digital · Trade</em></div><div class="grav">7.2</div><div class="sent neg">−0.22</div></div>
+            <div class="src"><div class="nm">The Ken <em>Newsletter</em></div><div class="grav">6.8</div><div class="sent neu">−0.04</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editorial — Insyt's view -->
+      <div class="editorial">
+        <div>
+          <div class="lab">Insyt's view<br/><span style="color: var(--bone-3); font-style: italic; font-family: var(--serif); text-transform: none; letter-spacing: 0; font-size: 11px;">Synthesised across the arc</span></div>
+        </div>
+        <div>
+          <p>"This is not a Kerala story. It is a regional-chain story that began in Kerala because that is where regulatory journalism is most active right now. By June, the same arc will appear in Tamil Nadu sources — the structure of the discussion already exists in Tamil reviewer communities, awaiting its catalyst.</p>
+          <p>The opening for Kalyan is to lead the trust frame, not respond to the compliance frame. Tanishq has already taken the trust ground in English. The Malayalam ground is, today, vacant."</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

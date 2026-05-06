@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — Daily Intelligence</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+
+  /* App chrome */
+  .chrome {
+    border-bottom: 1px solid var(--slate-edge);
+    padding: 14px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--slate);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .wm { font-size: 22px; }
+  .chrome .nav {
+    display: flex;
+    gap: 24px;
+    font-size: 14px;
+  }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .chrome .actor {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px;
+  }
+  .chrome .actor .av {
+    width: 28px; height: 28px;
+    background: var(--vermilion); color: var(--bone);
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  /* Masthead — newspaper-style */
+  .masthead {
+    padding: 32px 64px 24px;
+    border-bottom: 2px solid var(--bone);
+  }
+  .masthead .top-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .masthead h1 {
+    margin: 0 0 8px;
+    font-size: 96px;
+    line-height: 0.95;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+  .masthead h1 em { font-style: italic; }
+  .masthead h1 .stop { color: var(--vermilion-3); }
+  .masthead .deck {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 12px;
+  }
+  .masthead .deck .l {
+    font-style: italic;
+    font-size: 18px;
+    color: var(--bone-2);
+    max-width: 720px;
+  }
+  .masthead .deck .r {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    display: flex;
+    gap: 24px;
+  }
+
+  /* Brand strip — what is being watched */
+  .watching {
+    padding: 16px 64px;
+    border-bottom: 1px solid var(--slate-edge);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 13px;
+  }
+  .watching .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .watching .ent {
+    color: var(--bone);
+    border: 1px solid var(--slate-edge);
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .watching .ent.primary { background: var(--bone); color: var(--slate); border-color: var(--bone); }
+  .watching .more { color: var(--bone-3); font-size: 12px; }
+
+  /* Main grid — newspaper front page */
+  .front {
+    padding: 32px 64px 64px;
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: 32px;
+  }
+
+  /* The lead story — top brief */
+  .lead {
+    grid-column: 1 / 4;
+    border-bottom: 1px solid var(--slate-edge);
+    padding-bottom: 32px;
+    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr;
+    gap: 32px;
+  }
+  .lead .body { grid-column: 1 / 2; }
+  .lead .meta-col { grid-column: 2 / 3; }
+  .lead .actions { grid-column: 3 / 4; }
+
+  .severity-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--vermilion-3);
+  }
+  .severity-line .bars {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+  }
+  .severity-line .bars i {
+    width: 4px; height: 14px;
+    background: var(--bone-4);
+  }
+  .severity-line .bars i.on { background: var(--vermilion-3); }
+
+  .lead h2 {
+    margin: 0 0 16px;
+    font-size: 56px;
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--bone);
+  }
+  .lead h2 em { font-style: italic; }
+  .lead .standfirst {
+    font-size: 20px;
+    line-height: 1.45;
+    color: var(--bone-2);
+    margin-bottom: 24px;
+    max-width: 680px;
+    font-style: italic;
+  }
+  .lead p {
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--bone-2);
+    max-width: 600px;
+    margin: 0 0 14px;
+  }
+  .lead p strong { color: var(--bone); font-weight: 500; }
+  .lead .footnote-mark { color: var(--vermilion-3); font-style: italic; vertical-align: super; font-size: 11px; }
+
+  .lead .byline {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--slate-edge);
+    max-width: 600px;
+  }
+  .lead .byline .v3 { color: var(--vermilion-3); }
+
+  /* Meta column — the figures */
+  .lead .meta-col h4 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin: 0 0 16px;
+    font-weight: 500;
+  }
+  .figure {
+    border-top: 1px solid var(--slate-edge);
+    padding: 14px 0;
+  }
+  .figure:last-child { border-bottom: 1px solid var(--slate-edge); }
+  .figure .k {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin-bottom: 6px;
+  }
+  .figure .v {
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .figure .vsmall { font-size: 16px; }
+  .figure .v .delta { font-size: 13px; color: var(--vermilion-3); margin-left: 8px; font-family: var(--mono); letter-spacing: 0.04em; }
+  .figure .note { font-style: italic; font-size: 12px; color: var(--bone-3); margin-top: 4px; line-height: 1.4; }
+
+  /* Mini chart */
+  .spark {
+    height: 40px;
+    margin-top: 8px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+  }
+  .spark i {
+    flex: 1;
+    background: var(--bone-4);
+  }
+  .spark i.peak { background: var(--vermilion-3); }
+
+  /* Actions column */
+  .lead .actions h4 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin: 0 0 16px;
+    font-weight: 500;
+  }
+  .action-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 8px;
+    border: 1px solid var(--slate-edge);
+    background: var(--slate-2);
+    text-align: left;
+    cursor: pointer;
+  }
+  .action-btn.primary {
+    background: var(--vermilion);
+    border-color: var(--vermilion);
+    color: var(--bone);
+  }
+  .action-btn .lab {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin-bottom: 6px;
+  }
+  .action-btn.primary .lab { color: rgba(232,225,210,0.7); }
+  .action-btn .name {
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    line-height: 1.2;
+    color: var(--bone);
+  }
+  .action-btn.primary .name { color: var(--bone); }
+  .action-btn .name .arrow { float: right; font-style: italic; }
+
+  /* Source list -- abbreviated */
+  .sources-mini {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--slate-edge);
+    font-size: 11px;
+    color: var(--bone-3);
+    line-height: 1.7;
+    font-style: italic;
+  }
+  .sources-mini .lbl-m {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    font-style: normal;
+    margin-bottom: 6px;
+  }
+
+  /* Story cards under the lead */
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .col h4.section-h {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin: 0 0 4px;
+    font-weight: 500;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--bone);
+  }
+
+  .item {
+    border-bottom: 1px solid var(--slate-edge);
+    padding-bottom: 24px;
+  }
+  .item:last-child { border-bottom: 0; padding-bottom: 0; }
+  .item .sev {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin-bottom: 10px;
+  }
+  .item .sev .bars {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .item .sev .bars i {
+    width: 3px; height: 10px;
+    background: var(--bone-4);
+  }
+  .item .sev .bars i.on { background: var(--bone-2); }
+  .item .sev.attn .bars i.on { background: var(--vermilion-3); }
+  .item .sev.attn { color: var(--vermilion-3); }
+  .item h3 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--bone);
+  }
+  .item h3 em { font-style: italic; }
+  .item p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--bone-2);
+  }
+  .item .meta {
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .item .meta .v3 { color: var(--vermilion-3); }
+
+  /* The trajectory rail at bottom of lead -- a small chart */
+  .trajectory {
+    grid-column: 1 / 4;
+    margin-top: 8px;
+    padding: 24px 0 0;
+  }
+  .trajectory h4 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+    margin: 0 0 16px;
+    font-weight: 500;
+  }
+  .traj-chart {
+    height: 110px;
+    border-bottom: 1px solid var(--slate-edge);
+    border-top: 1px solid var(--slate-edge);
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px 0;
+  }
+  .traj-chart svg { width: 100%; height: 100%; }
+  .traj-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bone-3);
+  }
+</style>
+</head>
+<body class="on-slate">
+
+<div class="app">
+
+  <!-- Chrome -->
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark wm">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a class="active">Daily</a>
+        <a>Narrative</a>
+        <a>Replay</a>
+        <a>Drafts</a>
+        <a>Regional</a>
+        <a>Ground</a>
+        <a>People</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">⌘K · Search 4,212 sources</span>
+      <span class="meta">25 Apr 2026 · 06:42 IST</span>
+      <div class="actor">
+        <div class="av">RK</div>
+        <span style="color: var(--bone-2);">Ramesh Kalyanaraman</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="top-line">
+      <span>The morning brief · No. 412 · Saturday</span>
+      <span>Vol. 02 · Q2 2026</span>
+      <span>Watching: Kalyan Jewellers Ltd. · 14 entities</span>
+      <span>Compiled 06:30 IST · Read time 4 min</span>
+    </div>
+    <h1>The morning <em>brief<span class="stop">.</span></em></h1>
+    <div class="deck">
+      <div class="l">A regional Malayalam segment is moving the day's discussion. Three competitors have responded to hallmarking. You have not. One stock-relevant filing posted overnight on BSE.</div>
+      <div class="r">
+        <span>1 lead</span>
+        <span>4 watch</span>
+        <span>3 noted</span>
+        <span>1 draft pending review</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- What we're watching -->
+  <div class="watching">
+    <span class="lbl">Watching</span>
+    <span class="ent primary">Kalyan Jewellers Ltd.</span>
+    <span class="ent">T.S. Kalyanaraman</span>
+    <span class="ent">Ramesh Kalyanaraman</span>
+    <span class="ent">Brand: Candere</span>
+    <span class="ent">Tanishq <span style="color: var(--bone-3);">comp</span></span>
+    <span class="ent">Malabar Gold <span style="color: var(--bone-3);">comp</span></span>
+    <span class="ent">Joyalukkas <span style="color: var(--bone-3);">comp</span></span>
+    <span class="more">+ 7 more</span>
+  </div>
+
+  <!-- Front page -->
+  <div class="front">
+
+    <!-- LEAD -->
+    <div class="lead">
+      <div class="body">
+        <div class="severity-line">
+          <span class="bars"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+          <span>Severity 3 of 5 · Reputational · Regional</span>
+          <span style="color: var(--bone-3);">Story No. 1 of 8 today</span>
+        </div>
+        <h2>The hallmarking question reaches <em>Kerala</em>.</h2>
+        <div class="standfirst">A 14-minute Malayalam YouTube segment, posted overnight, has become the day's largest source of negative discussion — without yet appearing in English press.</div>
+        <p>The segment, by independent journalist <strong>Reshma Pillai</strong>, examines BIS hallmarking compliance among regional jewellery chains and names <strong>Kalyan</strong> twice in a 90-second passage<span class="footnote-mark">¹</span>. By 05:00 IST the upload had crossed <strong>412,000 views</strong> and <strong>1,840 comments</strong>, the majority of them adversarial in sentiment.</p>
+        <p>The story has not yet been picked up by <em>Manorama Online</em> or <em>Mathrubhumi</em>, but the gravity of those sources, combined with the segment's penetration through Kerala's WhatsApp networks<span class="footnote-mark">²</span>, suggests it will surface in print by tomorrow's edition.</p>
+        <p>The trajectory closely matches the 2023 Titan hallmarking moment, which moved from a single regional source into national press over 38 hours and required a CEO-level response. We expect a similar window here.</p>
+        <div class="byline">
+          Drafted by Insyt · 5 sources cited · Reviewed <span class="v3">0 of 1</span> · Updated 06:30 IST
+        </div>
+
+        <div class="sources-mini">
+          <div class="lbl-m">Source corpus</div>
+          ¹ Pillai, R. <em>"Hallmark, halfmark, no mark"</em> · YouTube · 24 Apr · 412k views ·
+          ² WhatsApp public-channel propagation index, computed across 38 Kerala channels ·
+          Comparative: Titan / Tanishq, 12 Mar 2023 ·
+          Sentiment model: regional-tuned, v4.2
+        </div>
+      </div>
+
+      <div class="meta-col">
+        <h4>The figures</h4>
+        <div class="figure">
+          <div class="k">Mentions</div>
+          <div class="v">2,184 <span class="delta">+318% vs 7d</span></div>
+          <div class="spark">
+            <i style="height: 12%"></i><i style="height: 18%"></i><i style="height: 14%"></i>
+            <i style="height: 22%"></i><i style="height: 16%"></i><i style="height: 28%"></i>
+            <i style="height: 32%"></i><i style="height: 24%"></i><i style="height: 38%"></i>
+            <i style="height: 30%"></i><i style="height: 44%"></i><i style="height: 56%"></i>
+            <i style="height: 78%"></i><i class="peak" style="height: 100%"></i>
+          </div>
+        </div>
+        <div class="figure">
+          <div class="k">Sentiment</div>
+          <div class="v" style="color: var(--vermilion-3);">−0.62</div>
+          <div class="note">Was −0.18 at 12 hours ago. Crossed adversarial threshold at 02:14 IST.</div>
+        </div>
+        <div class="figure">
+          <div class="k">Sources</div>
+          <div class="v">47</div>
+          <div class="note">28 Malayalam · 14 English · 5 Tamil. No print yet.</div>
+        </div>
+        <div class="figure">
+          <div class="k">Source gravity</div>
+          <div class="v vsmall">Pillai → 9.1 / 10</div>
+          <div class="note">Independent. ~1.2M subscribers. History of stories crossing into print.</div>
+        </div>
+        <div class="figure">
+          <div class="k">Estimated reach by tomorrow</div>
+          <div class="v vsmall">3.4 – 4.1 M</div>
+          <div class="note">If Manorama or Mathrubhumi covers, add 6-8 M.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <h4>Recommended actions</h4>
+        <button class="action-btn primary">
+          <div class="lab">Draft · Regional press response</div>
+          <div class="name">Open the regional draft <span class="arrow">→</span></div>
+        </button>
+        <button class="action-btn">
+          <div class="lab">Brief · Internal · 3 min read</div>
+          <div class="name">Brief the Comms team <span class="arrow">→</span></div>
+        </button>
+        <button class="action-btn">
+          <div class="lab">Compare · 2023 Titan replay</div>
+          <div class="name">Replay the precedent <span class="arrow">→</span></div>
+        </button>
+        <button class="action-btn">
+          <div class="lab">Watch · 14 channels</div>
+          <div class="name">Watch for English pickup <span class="arrow">→</span></div>
+        </button>
+
+        <div style="margin-top: 24px; padding: 14px; border: 1px solid var(--slate-edge); font-size: 12px; line-height: 1.5; color: var(--bone-3); font-style: italic;">
+          <span class="t-label" style="color: var(--bone-2); display: block; margin-bottom: 6px; font-style: normal;">Insyt's view</span>
+          Respond in Malayalam, in Kerala, before this becomes English. A national statement would amplify what has not yet&nbsp;crossed.
+        </div>
+      </div>
+
+      <!-- Trajectory chart spans full width -->
+      <div class="trajectory">
+        <h4>Story trajectory · Past 24 hours · Mention volume by language</h4>
+        <div class="traj-chart">
+          <svg viewBox="0 0 1280 80" preserveAspectRatio="none">
+            <!-- Malayalam (vermilion) -->
+            <path d="M0,75 L60,73 L120,72 L180,70 L240,68 L300,65 L360,60 L420,52 L480,42 L540,32 L600,24 L660,18 L720,14 L780,10 L840,8 L900,6 L960,5 L1020,5 L1080,4 L1140,4 L1200,3 L1280,3 L1280,80 L0,80 Z" fill="#E85543" opacity="0.85"/>
+            <!-- English (bone) -->
+            <path d="M0,78 L60,77 L120,77 L180,76 L240,76 L300,76 L360,75 L420,74 L480,72 L540,70 L600,68 L660,65 L720,62 L780,60 L840,58 L900,56 L960,54 L1020,52 L1080,50 L1140,48 L1200,46 L1280,44 L1280,80 L0,80 Z" fill="#7A7263" opacity="0.7"/>
+            <!-- Tamil (mossy) -->
+            <path d="M0,79 L60,79 L120,79 L180,78 L240,78 L300,77 L360,76 L420,76 L480,75 L540,74 L600,73 L660,72 L720,70 L780,68 L840,66 L900,64 L960,62 L1020,60 L1080,58 L1140,57 L1200,55 L1280,54 L1280,80 L0,80 Z" fill="#5A6B3F" opacity="0.6"/>
+
+            <!-- Pillai upload marker -->
+            <line x1="480" y1="0" x2="480" y2="80" stroke="#E85543" stroke-dasharray="2 3" stroke-width="1"/>
+            <!-- Adversarial threshold -->
+            <line x1="660" y1="0" x2="660" y2="80" stroke="#9A7A2E" stroke-dasharray="2 3" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="traj-axis">
+          <span>06:30 yesterday</span>
+          <span>12:00</span>
+          <span>18:00</span>
+          <span>00:00 today</span>
+          <span style="color: var(--vermilion-3);">↑ Pillai upload · 18:42</span>
+          <span style="color: var(--caution);">↑ Adversarial threshold · 02:14</span>
+          <span>06:30 today</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 1 — Watch -->
+    <div class="col">
+      <h4 class="section-h">Watch · Stories developing</h4>
+
+      <div class="item">
+        <div class="sev attn">
+          <span class="bars"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>
+          <span>Sev 2 · Competitive</span>
+        </div>
+        <h3>Tanishq's hallmarking <em>statement</em> draws a line — implicitly at competitors.</h3>
+        <p>A press release from Titan-Tanishq this morning emphasises BIS-strict supply-chain auditing, with language closely tracking the Pillai segment's framing. Read alongside the Kerala story.</p>
+        <div class="meta"><span>3 sources · English print</span><span class="v3">→ Read full</span></div>
+      </div>
+
+      <div class="item">
+        <div class="sev attn">
+          <span class="bars"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>
+          <span>Sev 2 · Regulatory</span>
+        </div>
+        <h3>BSE filing: a competitor has disclosed a related-party transaction.</h3>
+        <p>Joyalukkas India Pvt. Ltd. filed a Form A disclosure last evening citing a ₹84cr inter-group loan. Material? Probably not directly. Useful context for the analyst calls next week.</p>
+        <div class="meta"><span>BSE · Filing 2026/04/24-1142</span><span class="v3">→ Read full</span></div>
+      </div>
+
+      <div class="item">
+        <div class="sev">
+          <span class="bars"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>
+          <span>Sev 2 · Reputational · People</span>
+        </div>
+        <h3>Two Tamil-language reviews of the Coimbatore showroom turned negative overnight.</h3>
+        <p>Both cite waiting time and one names a sales associate. Volume is low (n=2) but the language matches a pattern observed in two other regional showrooms in the past 30 days.</p>
+        <div class="meta"><span>Google Local · 2 reviews</span><span>→ Open ground view</span></div>
+      </div>
+    </div>
+
+    <!-- COL 2 — Noted -->
+    <div class="col">
+      <h4 class="section-h">Noted · Worth your awareness</h4>
+
+      <div class="item">
+        <div class="sev">
+          <span class="bars"><i class="on"></i><i></i><i></i><i></i><i></i></span>
+          <span>Sev 1 · Macro</span>
+        </div>
+        <h3>Gold prices closed at <em>₹76,420 / 10g</em>. Up 2.4% on the week.</h3>
+        <p>Akshaya Tritiya falls on May 9 this year — fourteen days out. Three competitor brands have begun pre-event campaigns. You have not.</p>
+        <div class="meta"><span>MCX · IBJA · 6 sources</span><span>→ Open narrative</span></div>
+      </div>
+
+      <div class="item">
+        <div class="sev">
+          <span class="bars"><i class="on"></i><i></i><i></i><i></i><i></i></span>
+          <span>Sev 1 · Brand</span>
+        </div>
+        <h3>The Candere campaign is performing in metros, underperforming in Tier-2.</h3>
+        <p>Engagement on the digital-first sub-brand is 1.8× expectation in Mumbai/Bengaluru, 0.6× in Indore/Lucknow. The creative reads urban; the targeting does not.</p>
+        <div class="meta"><span>Brand · Digital · 12 sources</span><span>→ Open narrative</span></div>
+      </div>
+
+      <div class="item">
+        <div class="sev">
+          <span class="bars"><i class="on"></i><i></i><i></i><i></i><i></i></span>
+          <span>Sev 1 · People</span>
+        </div>
+        <h3>A profile of <em>T.S. Kalyanaraman</em> in <em>Forbes India</em> · expected Monday.</h3>
+        <p>A reporter from <em>Forbes India</em> has spoken with two sources adjacent to the company. Tone, from those conversations, reads positive. We are watching.</p>
+        <div class="meta"><span>People · Forbes India · 2 src</span><span>→ Open profile</span></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>

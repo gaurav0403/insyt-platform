@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — Regional Depth</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+
+  .chrome { border-bottom: 1px solid var(--slate-edge); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .nav { display: flex; gap: 24px; font-size: 14px; }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .chrome .actor { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .chrome .av { width: 28px; height: 28px; background: var(--vermilion); color: var(--bone); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+
+  .ph { padding: 32px 64px 24px; border-bottom: 2px solid var(--bone); display: flex; justify-content: space-between; align-items: flex-end; }
+  .ph h1 { margin: 0; font-size: 64px; font-weight: 500; line-height: 0.95; letter-spacing: -0.025em; }
+  .ph h1 em { font-style: italic; }
+  .ph h1 .stop { color: var(--vermilion-3); }
+  .ph .deck { font-style: italic; color: var(--bone-2); font-size: 16px; margin-top: 8px; max-width: 640px; }
+  .ph .langs { display: flex; gap: 6px; flex-wrap: wrap; max-width: 540px; }
+  .ph .lang {
+    border: 1px solid var(--slate-edge);
+    padding: 6px 10px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--bone-2);
+  }
+  .ph .lang.on { background: var(--bone); color: var(--slate); border-color: var(--bone); }
+
+  /* Body — two columns: vernacular | english side by side */
+  .body { padding: 32px 64px 80px; }
+
+  .meta-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 16px 0;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--slate-edge);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .meta-strip .v3 { color: var(--vermilion-3); }
+  .meta-strip span { padding-right: 24px; }
+
+  /* Each story is a side-by-side: vernacular | english | translation context */
+  .story {
+    display: grid;
+    grid-template-columns: 1fr 1fr 280px;
+    gap: 0;
+    border: 1px solid var(--slate-edge);
+    margin-bottom: 32px;
+    background: var(--slate);
+  }
+  .story-source {
+    padding: 28px;
+    border-right: 1px solid var(--slate-edge);
+  }
+  .story-source.vernac {
+    background: var(--slate-2);
+  }
+  .story-source.transl {
+    /* english translation pane */
+  }
+  .story-meta {
+    padding: 28px;
+    background: var(--slate-2);
+    border-left: 1px solid var(--slate-edge);
+  }
+
+  .src-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .src-head .nm {
+    font-size: 14px; font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .src-head .lang-tag {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--vermilion-3);
+  }
+
+  .vernac h3 {
+    margin: 0 0 12px;
+    font-size: 26px; font-weight: 500;
+    line-height: 1.2; letter-spacing: -0.005em;
+    color: var(--bone);
+    /* approximate Malayalam typographic weight by upping line-height */
+  }
+  .vernac p {
+    margin: 0 0 10px;
+    font-size: 15px; line-height: 1.65;
+    color: var(--bone-2);
+  }
+  .vernac .lang-attr {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-top: 14px;
+  }
+
+  .transl h3 {
+    margin: 0 0 12px;
+    font-size: 22px; font-weight: 500;
+    line-height: 1.2; letter-spacing: -0.005em;
+    font-style: italic;
+    color: var(--bone-2);
+  }
+  .transl p {
+    margin: 0 0 10px;
+    font-size: 14px; line-height: 1.65;
+    color: var(--bone-2);
+    font-style: italic;
+  }
+  .transl .lang-attr {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-top: 14px;
+  }
+
+  .story-meta h5 {
+    margin: 0 0 12px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--bone-3); font-weight: 500;
+  }
+  .story-meta .row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--slate-edge);
+    font-size: 12px;
+  }
+  .story-meta .row .k {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.12em; color: var(--bone-3);
+  }
+  .story-meta .row .v { color: var(--bone); font-weight: 500; }
+  .story-meta .row .v.neg { color: var(--vermilion-3); }
+  .story-meta .row .v.pos { color: var(--positive); }
+
+  .story-meta .untrans {
+    margin-top: 16px;
+    padding: 10px;
+    background: var(--slate);
+    border-left: 2px solid var(--vermilion-3);
+    font-size: 11px; line-height: 1.5;
+    color: var(--bone-3); font-style: italic;
+  }
+  .story-meta .untrans b { color: var(--bone-2); font-style: normal; font-weight: 500; }
+
+  .story-meta .actions {
+    margin-top: 16px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .story-meta .actions a {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--vermilion-3);
+  }
+
+  /* Penetration map at bottom */
+  .penetration {
+    margin-top: 16px;
+    padding: 28px;
+    background: var(--slate-2);
+    border: 1px solid var(--slate-edge);
+  }
+  .penetration h3 {
+    margin: 0 0 6px;
+    font-size: 22px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .penetration .deck {
+    font-style: italic; color: var(--bone-3);
+    font-size: 13px; margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .pen-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .pen-cell {
+    background: var(--slate);
+    padding: 16px;
+    border: 1px solid var(--slate-edge);
+  }
+  .pen-cell .lang {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--bone-3); margin-bottom: 8px;
+  }
+  .pen-cell .nm {
+    font-size: 17px; font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .pen-cell .bar {
+    height: 6px; background: var(--slate-edge); position: relative;
+    margin-bottom: 6px;
+  }
+  .pen-cell .bar .f {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--vermilion-3);
+  }
+  .pen-cell .nums {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px;
+    color: var(--bone-3); letter-spacing: 0.06em;
+  }
+  .pen-cell .nums .v { color: var(--bone); font-size: 16px; letter-spacing: -0.01em; }
+</style>
+</head>
+<body class="on-slate">
+<div class="app">
+
+  <!-- Chrome -->
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark" style="font-size: 22px;">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a>Daily</a><a>Narrative</a><a>Replay</a><a>Drafts</a><a class="active">Regional</a><a>Ground</a><a>People</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">14 languages · 4,212 sources</span>
+      <span class="meta">Theme · Hallmarking · 24h</span>
+      <div class="actor"><div class="av">RK</div><span style="color: var(--bone-2);">Ramesh K.</span></div>
+    </div>
+  </div>
+
+  <!-- Page head -->
+  <div class="ph">
+    <div>
+      <h1>Regional <em>depth<span class="stop">.</span></em></h1>
+      <div class="deck">Vernacular press, alongside English. India is not one media landscape — and the platform reads it that way. Source-weighted. Editor-reviewed.</div>
+    </div>
+    <div class="langs">
+      <span class="lang on">EN · English</span>
+      <span class="lang on">ML · Malayalam</span>
+      <span class="lang on">TA · Tamil</span>
+      <span class="lang">HI · Hindi</span>
+      <span class="lang">BN · Bangla</span>
+      <span class="lang">MR · Marathi</span>
+      <span class="lang">TE · Telugu</span>
+      <span class="lang">KN · Kannada</span>
+      <span class="lang">GU · Gujarati</span>
+      <span class="lang">+5 more</span>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <div class="meta-strip">
+      <div>
+        <span>Theme · Hallmarking · 24h</span>
+        <span>74 sources read</span>
+        <span class="v3">28 vernacular · not yet in English</span>
+        <span>3 require editor review</span>
+      </div>
+      <div>
+        <span>Sentiment · −0.62</span>
+        <span>Translations by Insyt + ML editor</span>
+      </div>
+    </div>
+
+    <!-- Story 1 — Pillai segment -->
+    <div class="story">
+      <div class="story-source vernac">
+        <div class="src-head">
+          <div class="nm">Reshma Pillai · YouTube</div>
+          <div class="lang-tag">ML · Malayalam · 24 Apr</div>
+        </div>
+        <h3>ഹാൾമാർക്ക്, ഹാഫ്മാർക്ക്, നോ മാർക്ക് — കേരളത്തിലെ ജ്വല്ലറികൾ ആരെ വിശ്വസിക്കാം?</h3>
+        <p>ഈ പതിനാല് മിനിറ്റിൽ, ഞാൻ കൊച്ചി, തൃശ്ശൂർ, കോഴിക്കോട് എന്നിവിടങ്ങളിലെ പ്രമുഖ ജ്വല്ലറി ശൃംഖലകൾ സന്ദർശിച്ച അനുഭവം പങ്കുവെയ്ക്കുന്നു.</p>
+        <p>BIS-ന്റെ 2024 ഫെബ്രുവരി സർക്കുലർ പ്രകാരം നാല് ഘട്ടങ്ങളിലുള്ള ഹാൾമാർക്കിംഗ് നിർബന്ധമാണ്. പക്ഷേ, എല്ലാ ശൃംഖലകളും ഇത് പിന്തുടരുന്നുണ്ടോ? <strong>കല്യാൺ ജ്വല്ലേഴ്സ്</strong>, <strong>മലബാർ ഗോൾഡ്</strong> എന്നിവിടങ്ങളിൽ നിന്ന് ഞാൻ വാങ്ങിയ സാമ്പിളുകൾ പരിശോധിച്ചപ്പോൾ…</p>
+        <p>വിശ്വാസം, വാഗ്ദാനമല്ല. അത് ഒരു സർട്ടിഫിക്കറ്റ് ആണ്. ആ സർട്ടിഫിക്കറ്റ് വായിക്കാൻ ഉപഭോക്താവിന് അവകാശം ഉണ്ട്.</p>
+        <div class="lang-attr">Native source · transcribed from video · timestamp 02:14 – 04:32</div>
+      </div>
+
+      <div class="story-source transl">
+        <div class="src-head">
+          <div class="nm" style="font-style: italic; color: var(--bone-3);">English translation</div>
+          <div class="lang-tag" style="color: var(--bone-3);">EN · Insyt + editor</div>
+        </div>
+        <h3>"Hallmark, halfmark, no mark — whom can Kerala's jewellers be trusted to be?"</h3>
+        <p>"In these fourteen minutes, I share what I found visiting the major jewellery chains in Kochi, Thrissur, and Kozhikode."</p>
+        <p>"Per the BIS February 2024 circular, four-stage hallmarking is mandatory. But are all chains following it? When I tested the samples I bought from <strong>Kalyan Jewellers</strong> and <strong>Malabar Gold</strong>…"</p>
+        <p>"Trust is not a promise. It is a certificate. And the customer has the right to read that certificate."</p>
+        <div class="lang-attr">Translated by Insyt · Reviewed by V. Menon, ML editor · 06:08 IST</div>
+      </div>
+
+      <div class="story-meta">
+        <h5>Signal · 24 Apr · 18:42</h5>
+        <div class="row"><span class="k">Reach · 24h</span><span class="v">412k views</span></div>
+        <div class="row"><span class="k">Sentiment</span><span class="v neg">−0.81</span></div>
+        <div class="row"><span class="k">Source gravity</span><span class="v">9.1 / 10</span></div>
+        <div class="row"><span class="k">Crossover prob.</span><span class="v neg">0.74</span></div>
+        <div class="row"><span class="k">Penetration</span><span class="v">38 ML channels</span></div>
+
+        <div class="untrans">
+          <b>Editor's note · V. Menon</b><br/>
+          The phrase <em>"വിശ്വാസം, വാഗ്ദാനമല്ല"</em> ("trust is not a promise") is colloquially weighty in Malayalam — closer in register to a moral claim than the English captures. Worth defending against in a regional response.
+        </div>
+
+        <div class="actions">
+          <a>→ Open this signal</a>
+          <a>→ Find comparable arc</a>
+          <a>→ Draft a Malayalam reply</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Story 2 — Tamil review -->
+    <div class="story">
+      <div class="story-source vernac">
+        <div class="src-head">
+          <div class="nm">Daily Thanthi · Coimbatore edition</div>
+          <div class="lang-tag">TA · Tamil · 25 Apr</div>
+        </div>
+        <h3>நகை வாங்குபவர்களுக்கு புரிய வேண்டியது: ஹால்மார்க் சான்றிதழ் என்ன சொல்கிறது?</h3>
+        <p>கேரளாவில் தொடங்கிய விவாதம் இப்போது தமிழ்நாட்டில் எதிரொலிக்கிறது. <strong>கல்யாண் ஜூவல்லர்ஸ்</strong> கோயம்புத்தூர் கிளையில், கடந்த வாரம் வாங்கப்பட்ட ஒரு செயினின் ஹால்மார்க் சான்றிதழை மீண்டும் சரிபார்க்க வேண்டிய நிலை உருவாகியுள்ளது…</p>
+        <p>நுகர்வோர் சங்கம் இந்த விவகாரத்தை உற்றுநோக்குகிறது. அடுத்த வாரம் சங்கத்தின் கூட்டத்தில் இது விவாதிக்கப்படும்.</p>
+        <div class="lang-attr">Print column · 380 words · page 7 · circulation 1.2M</div>
+      </div>
+
+      <div class="story-source transl">
+        <div class="src-head">
+          <div class="nm" style="font-style: italic; color: var(--bone-3);">English translation</div>
+          <div class="lang-tag" style="color: var(--bone-3);">EN · Insyt + editor</div>
+        </div>
+        <h3>"What jewellery buyers should understand: what does the hallmark certificate say?"</h3>
+        <p>"The discussion that began in Kerala is now echoing in Tamil Nadu. At <strong>Kalyan Jewellers</strong>' Coimbatore branch, a chain purchased last week has prompted a re-verification of its hallmark certificate…"</p>
+        <p>"The Consumer Council is watching this matter closely. It will be discussed at next week's council meeting."</p>
+        <div class="lang-attr">Translated by Insyt · Reviewed by S. Iyer, TA editor · 06:18 IST</div>
+      </div>
+
+      <div class="story-meta">
+        <h5>Signal · 25 Apr · 04:30</h5>
+        <div class="row"><span class="k">Reach · 24h</span><span class="v">~84k</span></div>
+        <div class="row"><span class="k">Sentiment</span><span class="v neg">−0.34</span></div>
+        <div class="row"><span class="k">Source gravity</span><span class="v">7.8 / 10</span></div>
+        <div class="row"><span class="k">Crossover prob.</span><span class="v">0.42</span></div>
+        <div class="row"><span class="k">Print run</span><span class="v">Coimbatore + Salem</span></div>
+
+        <div class="untrans">
+          <b>Editor's note · S. Iyer</b><br/>
+          Naming a Coimbatore branch is significant. The Tamil-language consumer council referenced (<em>நுகர்வோர் சங்கம்</em>) has historically had real escalation power in Tamil Nadu, unlike its English-press equivalent.
+        </div>
+
+        <div class="actions">
+          <a>→ Open this signal</a>
+          <a>→ Open ground view · Coimbatore</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Penetration grid -->
+    <div class="penetration">
+      <h3>Penetration of the hallmarking story · by language · last 24h</h3>
+      <div class="deck">Where the conversation is alive, where it has not yet arrived. Penetration combines source count, source gravity, and propagation index. Vermilion bars indicate active discussion; grey, latent.</div>
+      <div class="pen-grid">
+        <div class="pen-cell">
+          <div class="lang">ML · Malayalam</div>
+          <div class="nm">Kerala</div>
+          <div class="bar"><div class="f" style="width: 92%;"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.92</span></div>
+        </div>
+        <div class="pen-cell">
+          <div class="lang">TA · Tamil</div>
+          <div class="nm">Tamil Nadu</div>
+          <div class="bar"><div class="f" style="width: 48%;"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.48</span></div>
+        </div>
+        <div class="pen-cell">
+          <div class="lang">EN · English</div>
+          <div class="nm">National</div>
+          <div class="bar"><div class="f" style="width: 22%;"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.22</span></div>
+        </div>
+        <div class="pen-cell">
+          <div class="lang">KN · Kannada</div>
+          <div class="nm">Karnataka</div>
+          <div class="bar"><div class="f" style="width: 8%; background: var(--bone-3);"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.08</span></div>
+        </div>
+        <div class="pen-cell">
+          <div class="lang">TE · Telugu</div>
+          <div class="nm">A.P. + Telangana</div>
+          <div class="bar"><div class="f" style="width: 6%; background: var(--bone-3);"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.06</span></div>
+        </div>
+        <div class="pen-cell">
+          <div class="lang">HI · Hindi</div>
+          <div class="nm">North India</div>
+          <div class="bar"><div class="f" style="width: 4%; background: var(--bone-3);"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.04</span></div>
+        </div>
+        <div class="pen-cell">
+          <div class="lang">MR · Marathi</div>
+          <div class="nm">Maharashtra</div>
+          <div class="bar"><div class="f" style="width: 2%; background: var(--bone-3);"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.02</span></div>
+        </div>
+        <div class="pen-cell">
+          <div class="lang">BN · Bangla</div>
+          <div class="nm">West Bengal</div>
+          <div class="bar"><div class="f" style="width: 0%;"></div></div>
+          <div class="nums"><span>Penetration</span><span class="v">0.00</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

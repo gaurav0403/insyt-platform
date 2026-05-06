@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — Crisis Reconstruction</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+
+  /* Chrome */
+  .chrome { border-bottom: 1px solid var(--slate-edge); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .nav { display: flex; gap: 24px; font-size: 14px; }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .chrome .actor { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .chrome .av { width: 28px; height: 28px; background: var(--vermilion); color: var(--bone); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+
+  /* Hero — the case being replayed */
+  .case {
+    padding: 32px 64px 24px;
+    border-bottom: 2px solid var(--bone);
+  }
+  .case .lbl {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--vermilion-3); margin-bottom: 16px;
+  }
+  .case h1 {
+    margin: 0 0 12px;
+    font-size: 64px; font-weight: 500;
+    line-height: 0.98; letter-spacing: -0.025em;
+    max-width: 1100px;
+  }
+  .case h1 em { font-style: italic; }
+  .case h1 .stop { color: var(--vermilion-3); }
+  .case .deck {
+    font-style: italic;
+    color: var(--bone-2);
+    font-size: 18px;
+    max-width: 880px;
+    line-height: 1.5;
+  }
+  .case .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 24px; padding-top: 16px;
+    border-top: 1px solid var(--slate-edge);
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .case .row .v3 { color: var(--vermilion-3); }
+
+  /* Replay scrubber */
+  .scrubber {
+    padding: 24px 64px;
+    border-bottom: 1px solid var(--slate-edge);
+    background: var(--slate-2);
+  }
+  .scrubber .head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 16px;
+  }
+  .scrubber h4 {
+    margin: 0;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--bone-3); font-weight: 500;
+  }
+  .scrubber .controls {
+    display: flex; gap: 8px;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.06em; color: var(--bone-2);
+  }
+  .scrubber .ctrl {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    border: 1px solid var(--slate-edge);
+    cursor: pointer;
+  }
+  .scrubber .ctrl.play { background: var(--vermilion); color: var(--bone); border-color: var(--vermilion); }
+  .scrubber .speed {
+    border: 1px solid var(--slate-edge);
+    padding: 0 12px;
+    height: 32px; line-height: 32px;
+    font-size: 11px;
+  }
+  .timeline {
+    position: relative;
+    height: 60px;
+    margin-top: 8px;
+  }
+  .timeline svg { width: 100%; height: 100%; display: block; }
+  .axis-row {
+    display: flex; justify-content: space-between;
+    margin-top: 4px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--bone-3);
+  }
+  .axis-row .now { color: var(--vermilion-3); }
+
+  /* Replay body — current point in time */
+  .now-bar {
+    padding: 18px 64px;
+    border-bottom: 1px solid var(--slate-edge);
+    display: flex; justify-content: space-between; align-items: baseline;
+    background: var(--slate-2);
+  }
+  .now-bar .when {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .now-bar .when em { font-style: italic; color: var(--bone-2); }
+  .now-bar .stage {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--vermilion-3);
+  }
+
+  /* Three-pane: signals · what insyt would have detected · what it would have drafted */
+  .panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .pane {
+    padding: 32px;
+    border-right: 1px solid var(--slate-edge);
+    min-height: 540px;
+  }
+  .pane:last-child { border-right: 0; }
+  .pane h3 {
+    margin: 0 0 6px;
+    font-size: 22px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .pane .deck {
+    font-size: 13px; font-style: italic;
+    color: var(--bone-3); line-height: 1.5;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+
+  /* Signals (col 1) */
+  .signal {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .signal:last-child { border-bottom: 0; }
+  .signal .src {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-bottom: 6px;
+    display: flex; justify-content: space-between;
+  }
+  .signal .src .lang { color: var(--bone-3); }
+  .signal .nm {
+    font-size: 13px; line-height: 1.5;
+    color: var(--bone-2); font-style: italic;
+  }
+  .signal .nm strong { color: var(--bone); font-weight: 500; font-style: normal; }
+  .signal.alert {
+    margin: 0 -16px;
+    padding: 14px 16px;
+    background: rgba(232,85,67,0.06);
+    border-left: 2px solid var(--vermilion-3);
+    border-bottom: 1px solid var(--slate-edge);
+  }
+
+  /* Insyt detection (col 2) */
+  .detection {
+    border: 1px solid var(--vermilion-3);
+    padding: 20px;
+    background: rgba(232,85,67,0.04);
+    margin-bottom: 16px;
+  }
+  .detection .ts {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--vermilion-3); margin-bottom: 12px;
+  }
+  .detection h4 {
+    margin: 0 0 8px;
+    font-size: 19px; font-weight: 500;
+    line-height: 1.2; letter-spacing: -0.005em;
+  }
+  .detection h4 em { font-style: italic; }
+  .detection p {
+    margin: 0 0 10px;
+    font-size: 13px; line-height: 1.55;
+    color: var(--bone-2);
+  }
+  .detection .figs {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--slate-edge);
+  }
+  .detection .figs .k {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-bottom: 4px;
+  }
+  .detection .figs .v {
+    font-size: 18px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .detection .figs .v.neg { color: var(--vermilion-3); }
+
+  .vs-actual {
+    padding: 14px 16px;
+    border: 1px dashed var(--bone-4);
+    margin-top: 16px;
+  }
+  .vs-actual .lbl {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-bottom: 6px;
+  }
+  .vs-actual p {
+    margin: 0;
+    font-size: 13px; line-height: 1.55;
+    color: var(--bone-2); font-style: italic;
+  }
+
+  /* Draft (col 3) */
+  .draft-card {
+    background: var(--paper);
+    color: var(--ink);
+    padding: 24px;
+    margin-bottom: 12px;
+    font-family: var(--serif);
+  }
+  .draft-card .top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 8px; margin-bottom: 14px;
+  }
+  .draft-card .top .wm {
+    font-family: var(--serif); font-weight: 500; font-size: 16px; letter-spacing: -0.02em;
+  }
+  .draft-card .top .wm .stop { color: var(--vermilion); }
+  .draft-card .top .lab {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
+  }
+  .draft-card h5 {
+    margin: 0 0 8px;
+    font-size: 18px; font-weight: 500;
+    line-height: 1.15; letter-spacing: -0.005em;
+  }
+  .draft-card .deck {
+    font-size: 12px; color: var(--ink-2);
+    font-style: italic; margin-bottom: 12px;
+  }
+  .draft-card p {
+    margin: 0 0 10px;
+    font-size: 12px; line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .draft-card .byline {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--paper-edge);
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
+  }
+
+  /* Verdict bar at bottom */
+  .verdict {
+    padding: 56px 64px;
+    background: var(--ink);
+  }
+  .verdict .head {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 48px;
+    margin-bottom: 32px;
+  }
+  .verdict .lbl {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(244,239,230,0.5);
+  }
+  .verdict h2 {
+    margin: 0;
+    font-size: 44px; font-weight: 500;
+    line-height: 1.05; letter-spacing: -0.02em;
+    color: var(--paper);
+  }
+  .verdict h2 em { font-style: italic; }
+  .verdict h2 .stop { color: var(--vermilion-3); }
+  .verdict .body-grid {
+    display: grid; grid-template-columns: 200px 1fr 1fr 1fr;
+    gap: 48px;
+  }
+  .verdict .item h6 {
+    margin: 0 0 12px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(244,239,230,0.5);
+    font-weight: 500;
+  }
+  .verdict .item .big {
+    font-size: 56px; font-weight: 500;
+    line-height: 1; letter-spacing: -0.025em;
+    color: var(--vermilion-3);
+    margin-bottom: 12px;
+  }
+  .verdict .item .big em { font-style: italic; }
+  .verdict .item p {
+    margin: 0;
+    font-size: 14px; line-height: 1.55;
+    color: rgba(244,239,230,0.78);
+  }
+</style>
+</head>
+<body class="on-slate">
+<div class="app">
+
+  <!-- Chrome -->
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark" style="font-size: 22px;">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a>Daily</a><a>Narrative</a><a class="active">Replay</a><a>Drafts</a><a>Regional</a><a>Ground</a><a>People</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">Replay mode · 12 Mar 2023 → 16 Mar 2023</span>
+      <span class="meta">Comparing: actual response · vs Insyt</span>
+      <div class="actor"><div class="av">RK</div><span style="color: var(--bone-2);">Ramesh K.</span></div>
+    </div>
+  </div>
+
+  <!-- Case header -->
+  <div class="case">
+    <div class="lbl">Crisis reconstruction · Case study no. 14</div>
+    <h1>The Tanishq <em>hallmarking</em> moment, replayed day by&nbsp;day<span class="stop">.</span></h1>
+    <div class="deck">In March 2023, a single regional-press article moved from a Kerala daily to the national front pages over 38 hours. Tanishq's response came at hour 41. We replay the four days, signal by signal, and ask: what would Insyt have detected, when, and what would it have drafted?</div>
+    <div class="row">
+      <span>Case · Tanishq Hallmarking · Mar 2023</span>
+      <span>Window · 96 hours</span>
+      <span>Signals replayed · 4,820</span>
+      <span class="v3">Insyt's first alert · 26 hours before the actual response</span>
+    </div>
+  </div>
+
+  <!-- Scrubber -->
+  <div class="scrubber">
+    <div class="head">
+      <h4>Replay timeline · 96 hours</h4>
+      <div class="controls">
+        <span class="ctrl">⏮</span>
+        <span class="ctrl play">▶</span>
+        <span class="ctrl">⏭</span>
+        <span class="speed">×4 speed</span>
+        <span class="speed">Hour 38 of 96</span>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <svg viewBox="0 0 1280 60" preserveAspectRatio="none">
+        <!-- track -->
+        <line x1="0" y1="40" x2="1280" y2="40" stroke="#2A261E" stroke-width="2"/>
+        <!-- volume bars across timeline -->
+        <g fill="#7A7263">
+          <rect x="10"  y="36" width="3" height="4"/>
+          <rect x="40"  y="34" width="3" height="6"/>
+          <rect x="80"  y="36" width="3" height="4"/>
+          <rect x="130" y="32" width="3" height="8"/>
+          <rect x="180" y="34" width="3" height="6"/>
+          <rect x="230" y="30" width="3" height="10"/>
+          <rect x="280" y="28" width="3" height="12"/>
+          <rect x="320" y="26" width="3" height="14"/>
+          <rect x="360" y="22" width="3" height="18"/>
+          <rect x="400" y="20" width="3" height="20"/>
+        </g>
+        <g fill="#E85543">
+          <rect x="440" y="16" width="3" height="24"/>
+          <rect x="480" y="12" width="3" height="28"/>
+          <rect x="520" y="8"  width="3" height="32"/>
+          <rect x="560" y="4"  width="3" height="36"/>
+          <rect x="600" y="2"  width="3" height="38"/>
+          <rect x="640" y="6"  width="3" height="34"/>
+          <rect x="680" y="10" width="3" height="30"/>
+          <rect x="720" y="14" width="3" height="26"/>
+          <rect x="760" y="20" width="3" height="20"/>
+          <rect x="800" y="22" width="3" height="18"/>
+          <rect x="840" y="24" width="3" height="16"/>
+          <rect x="880" y="26" width="3" height="14"/>
+          <rect x="920" y="28" width="3" height="12"/>
+        </g>
+        <g fill="#7A7263">
+          <rect x="960"  y="30" width="3" height="10"/>
+          <rect x="1000" y="32" width="3" height="8"/>
+          <rect x="1040" y="34" width="3" height="6"/>
+          <rect x="1080" y="34" width="3" height="6"/>
+          <rect x="1120" y="36" width="3" height="4"/>
+          <rect x="1160" y="36" width="3" height="4"/>
+          <rect x="1200" y="38" width="3" height="2"/>
+          <rect x="1240" y="38" width="3" height="2"/>
+        </g>
+
+        <!-- markers -->
+        <line x1="120" y1="0" x2="120" y2="50" stroke="#7A7263" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="124" y="56" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">A · Mathrubhumi article</text>
+
+        <line x1="200" y1="0" x2="200" y2="50" stroke="#E85543" stroke-width="1.5"/>
+        <text x="204" y="56" font-family="JetBrains Mono" font-size="9" fill="#E85543" letter-spacing="1">★ INSYT 1st ALERT</text>
+
+        <line x1="500" y1="0" x2="500" y2="50" stroke="#9A7A2E" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="504" y="56" font-family="JetBrains Mono" font-size="9" fill="#9A7A2E" letter-spacing="1">B · Mint front page</text>
+
+        <line x1="540" y1="0" x2="540" y2="50" stroke="#E8E1D2" stroke-width="2"/>
+        <text x="544" y="56" font-family="JetBrains Mono" font-size="9" fill="#E8E1D2" letter-spacing="1">▍ NOW · hour 38</text>
+
+        <line x1="700" y1="0" x2="700" y2="50" stroke="#7A7263" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="704" y="56" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">C · Actual response (hr 41)</text>
+      </svg>
+    </div>
+    <div class="axis-row">
+      <span>00:00 · Day 1</span>
+      <span>12:00</span>
+      <span>00:00 · Day 2</span>
+      <span class="now">12:00 · Day 2</span>
+      <span>00:00 · Day 3</span>
+      <span>12:00 · Day 3</span>
+      <span>00:00 · Day 4</span>
+      <span>End</span>
+    </div>
+  </div>
+
+  <!-- Now bar -->
+  <div class="now-bar">
+    <div class="when">▍ Hour 38 · <em>13 Mar 2023, 17:42 IST</em></div>
+    <div class="stage">Stage · escalation · adversarial sentiment passing −0.5</div>
+  </div>
+
+  <!-- Three panes -->
+  <div class="panes">
+
+    <!-- Pane 1 — signals at this moment -->
+    <div class="pane">
+      <h3>What was happening</h3>
+      <div class="deck">All signals visible to Insyt at hour 38, before any human had escalated. 4,820 raw signals · 412 retained · 38 deemed material.</div>
+
+      <div class="signal">
+        <div class="src"><span>Mathrubhumi · Online</span><span class="lang">MAL · 14h ago</span></div>
+        <div class="nm"><strong>"Hallmarking enforcement uneven across regional chains"</strong> — feature column, 1,400 words. Names two regional jewellers in passing.</div>
+      </div>
+
+      <div class="signal alert">
+        <div class="src" style="color: var(--vermilion-3);"><span>YouTube · Independent</span><span>MAL · 6h ago</span></div>
+        <div class="nm"><strong>14-min segment by Reshma Pillai</strong> reframes the Mathrubhumi story for a younger audience. 187k views and rising at 18% per hour.</div>
+      </div>
+
+      <div class="signal alert">
+        <div class="src" style="color: var(--vermilion-3);"><span>Twitter · X India</span><span>EN · last 2h</span></div>
+        <div class="nm">A sharp uptick from <strong>4 verified financial commentators</strong>. Sentiment is curious, not yet adversarial.</div>
+      </div>
+
+      <div class="signal">
+        <div class="src"><span>WhatsApp · Public channels</span><span>MAL · last 4h</span></div>
+        <div class="nm">Cross-channel propagation of the Pillai segment across <strong>38 Kerala channels</strong>. Penetration index 0.74 — rapid.</div>
+      </div>
+
+      <div class="signal">
+        <div class="src"><span>Mint · Newsroom</span><span>EN · sourcing</span></div>
+        <div class="nm"><em>Reporter Rohan Mehta has filed two related queries with Tanishq comms. No story yet — but a story is forming.</em></div>
+      </div>
+
+      <div class="signal">
+        <div class="src"><span>Google Local</span><span>EN/MAL · 3h</span></div>
+        <div class="nm">No reviews mention hallmarking. Yet.</div>
+      </div>
+    </div>
+
+    <!-- Pane 2 — what Insyt detected -->
+    <div class="pane">
+      <h3>What Insyt detected</h3>
+      <div class="deck">The platform's interpretation, generated at this moment, with no future knowledge. Severity 3, escalating. Confidence: high.</div>
+
+      <div class="detection">
+        <div class="ts">★ Alert raised at hour 12 · 26 hours before actual response</div>
+        <h4>"The hallmarking question is becoming a <em>regional-press</em> story."</h4>
+        <p>The Mathrubhumi column is the first regional-press piece to frame hallmarking as a consumer-trust issue rather than a regulatory one. The Pillai segment, posted within 8 hours, indicates the story has found its second source.</p>
+        <p>Two of Insyt's pattern-matchers fire here: <em>regional-source first, English-press second</em> (matches 4 prior arcs in the past 18 months), and <em>video reframing of print column</em> (high-conviction signal for crossover within 36 hours).</p>
+        <div class="figs">
+          <div><div class="k">Predicted Sev at peak</div><div class="v neg">3 of 5</div></div>
+          <div><div class="k">Hours to English print</div><div class="v">28 ± 8</div></div>
+          <div><div class="k">Confidence</div><div class="v">0.81</div></div>
+          <div><div class="k">Comparable arcs</div><div class="v">4 prior</div></div>
+        </div>
+      </div>
+
+      <div class="vs-actual">
+        <div class="lbl">What actually happened</div>
+        <p>The Tanishq comms team became aware of the Pillai segment at hour 31, when the first English-press inquiry arrived from Mint. A statement was drafted, reviewed, and issued at hour 41 — by which point the story had reached the front page of Mint's print edition and BSE had flagged unusual options activity.</p>
+      </div>
+    </div>
+
+    <!-- Pane 3 — what Insyt would have drafted -->
+    <div class="pane">
+      <h3>What Insyt would have drafted</h3>
+      <div class="deck">A response, generated at hour 12, ready for review. The brief hour 12 leaves 29 hours of editorial time before the story crosses to English. The actual response had four hours.</div>
+
+      <div class="draft-card">
+        <div class="top">
+          <div class="wm">Insyt<span class="stop">.</span> draft</div>
+          <div class="lab">Regional · Malayalam · Press</div>
+        </div>
+        <h5>For release in Kerala outlets · embargoed</h5>
+        <div class="deck">A statement framed as continuity of practice, not response to controversy.</div>
+        <p>"At Tanishq we have, since 2018, operated a four-stage hallmarking audit across every karat of gold sold under the Tata Group's stewardship. Our showrooms in Thrissur, Kozhikode, Ernakulam and Thiruvananthapuram publish quarterly compliance summaries on request…"</p>
+        <p>"We welcome the conversation. We invite Ms. Pillai to visit our Ernakulam audit facility…"</p>
+        <div class="byline">5 sources cited · Drafted 13 Mar · 06:12 IST · Reviewed 0 / 2</div>
+      </div>
+
+      <div class="draft-card">
+        <div class="top">
+          <div class="wm">Insyt<span class="stop">.</span> brief</div>
+          <div class="lab">Internal · CEO &amp; Comms · 3 min</div>
+        </div>
+        <h5>Hallmarking — a regional story, before it crosses</h5>
+        <div class="deck">A two-page note for the executive team, with sourcing and recommended escalation path.</div>
+        <p>"This is not yet a Tanishq story. It will be one, in English, by the end of tomorrow. The opening that exists for the next 28 hours is to lead the trust frame in Malayalam, where the conversation is still forming…"</p>
+        <div class="byline">Drafted by Insyt · Reviewed 0 / 1 · 06:12 IST</div>
+      </div>
+
+      <div class="draft-card">
+        <div class="top">
+          <div class="wm">Insyt<span class="stop">.</span> draft</div>
+          <div class="lab">Social · Tata Group leadership</div>
+        </div>
+        <h5>A short post for the Group Chairman's account</h5>
+        <p>"Trust is a four-stage practice in our showrooms, not a one-line statement after the fact. We publish our audits quarterly. We always have…"</p>
+        <div class="byline">Drafted by Insyt · 06:14 IST · Reviewed 0 / 1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verdict bar -->
+  <div class="verdict">
+    <div class="head">
+      <div class="lbl">§ The verdict</div>
+      <h2>If Tanishq had been on Insyt — the story would have moved <em>twenty-nine hours</em> earlier, in the language that mattered<span class="stop">.</span></h2>
+    </div>
+    <div class="body-grid">
+      <div class="lbl">Reconstructed against the public record. Source corpus available on request.</div>
+      <div class="item">
+        <h6>Time saved</h6>
+        <div class="big">29 <em>hrs</em></div>
+        <p>From signal to response. The actual response came at hour 41. Insyt would have drafted at hour 12.</p>
+      </div>
+      <div class="item">
+        <h6>Reach avoided</h6>
+        <div class="big">8.4 <em>M</em></div>
+        <p>Estimated additional negative reach absorbed in the 29 hours before the actual response — concentrated in Kerala English-print readership.</p>
+      </div>
+      <div class="item">
+        <h6>Frame controlled</h6>
+        <div class="big">Trust</div>
+        <p>By drafting in Malayalam first, Insyt would have established the trust frame regionally before the compliance frame crystallised nationally.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

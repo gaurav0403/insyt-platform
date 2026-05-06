@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — People Monitoring</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+  .chrome { border-bottom: 1px solid var(--slate-edge); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .nav { display: flex; gap: 24px; font-size: 14px; }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .chrome .actor { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .chrome .av { width: 28px; height: 28px; background: var(--vermilion); color: var(--bone); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+
+  .ph { padding: 32px 64px 24px; border-bottom: 2px solid var(--bone); }
+  .ph h1 { margin: 0; font-size: 64px; font-weight: 500; line-height: 0.95; letter-spacing: -0.025em; }
+  .ph h1 em { font-style: italic; }
+  .ph h1 .stop { color: var(--vermilion-3); }
+  .ph .deck { font-style: italic; color: var(--bone-2); font-size: 16px; margin-top: 8px; max-width: 720px; }
+
+  /* Roster — horizontal strip */
+  .roster {
+    padding: 20px 64px;
+    border-bottom: 1px solid var(--slate-edge);
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+  }
+  .person {
+    border: 1px solid var(--slate-edge);
+    padding: 14px 16px;
+    min-width: 200px;
+    cursor: pointer;
+  }
+  .person.active { background: var(--slate-2); border-color: var(--vermilion-3); }
+  .person .nm { font-size: 14px; font-weight: 500; letter-spacing: -0.005em; }
+  .person .role { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); margin-top: 4px; }
+  .person .meta { display: flex; gap: 12px; margin-top: 8px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; }
+  .person .meta .neg { color: var(--vermilion-3); }
+  .person .meta .pos { color: var(--positive); }
+  .person .meta .neu { color: var(--bone-3); }
+
+  .body { padding: 32px 64px 80px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; }
+
+  .profile-head { padding-bottom: 24px; border-bottom: 1px solid var(--slate-edge); margin-bottom: 24px; }
+  .profile-head .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--vermilion-3); margin-bottom: 12px; }
+  .profile-head h2 { margin: 0 0 8px; font-size: 56px; font-weight: 500; line-height: 1.02; letter-spacing: -0.02em; }
+  .profile-head h2 em { font-style: italic; }
+  .profile-head .role { font-style: italic; color: var(--bone-2); font-size: 18px; }
+  .figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 24px 0; }
+  .fig { border-top: 1px solid var(--slate-edge); padding-top: 12px; }
+  .fig .k { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); margin-bottom: 6px; }
+  .fig .v { font-size: 24px; font-weight: 500; letter-spacing: -0.015em; }
+  .fig .v.pos { color: var(--positive); }
+  .fig .v.neg { color: var(--vermilion-3); }
+  .fig .note { font-size: 11px; color: var(--bone-3); font-style: italic; margin-top: 4px; line-height: 1.4; }
+
+  /* Mention timeline */
+  .timeline-h { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); margin: 0 0 12px; padding-bottom: 12px; border-bottom: 2px solid var(--bone); font-weight: 500; }
+  .mention { padding: 16px 0; border-bottom: 1px solid var(--slate-edge); display: grid; grid-template-columns: 100px 1fr 80px; gap: 16px; }
+  .mention .when { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--bone-3); }
+  .mention .when .date { color: var(--bone); font-size: 12px; display: block; margin-bottom: 2px; }
+  .mention .body-m h5 { margin: 0 0 6px; font-size: 16px; font-weight: 500; line-height: 1.2; letter-spacing: -0.005em; }
+  .mention .body-m h5 em { font-style: italic; }
+  .mention .body-m p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--bone-2); font-style: italic; max-width: 580px; }
+  .mention .src { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); text-align: right; }
+  .mention .src .sent { display: block; margin-top: 4px; }
+  .mention .src .sent.neg { color: var(--vermilion-3); }
+  .mention .src .sent.pos { color: var(--positive); }
+  .mention .src .sent.neu { color: var(--bone-3); }
+
+  /* Side panel */
+  .side h4 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bone-3); margin: 0 0 12px; padding-bottom: 12px; border-bottom: 2px solid var(--bone); font-weight: 500; }
+  .topic { padding: 12px 0; border-bottom: 1px solid var(--slate-edge); display: grid; grid-template-columns: 1fr 60px; gap: 16px; align-items: baseline; }
+  .topic .nm { font-size: 14px; }
+  .topic .vol { font-family: var(--mono); font-size: 11px; color: var(--bone-3); text-align: right; letter-spacing: 0.04em; }
+  .topic .nm em { font-style: italic; color: var(--bone-3); font-size: 11px; display: block; margin-top: 2px; }
+  .topic .nm.pos strong { color: var(--positive); font-weight: 500; }
+  .topic .nm.neg strong { color: var(--vermilion-3); font-weight: 500; }
+
+  /* Reputation arc — line chart */
+  .arc-box { margin: 32px 0; }
+  .arc-box svg { width: 100%; height: 180px; display: block; border-top: 1px solid var(--slate-edge); border-bottom: 1px solid var(--slate-edge); }
+  .arc-axis { display: flex; justify-content: space-between; margin-top: 8px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bone-3); }
+
+  .editorial { margin-top: 24px; padding: 20px; background: var(--slate-2); border-left: 2px solid var(--vermilion-3); font-size: 14px; line-height: 1.55; color: var(--bone-2); font-style: italic; }
+  .editorial .lab { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--vermilion-3); margin-bottom: 8px; font-style: normal; }
+</style>
+</head>
+<body class="on-slate">
+<div class="app">
+
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark" style="font-size: 22px;">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a>Daily</a><a>Narrative</a><a>Replay</a><a>Drafts</a><a>Regional</a><a>Ground</a><a class="active">People</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">9 monitored entities</span>
+      <span class="meta">Window · 90d</span>
+      <div class="actor"><div class="av">RK</div><span style="color: var(--bone-2);">Ramesh K.</span></div>
+    </div>
+  </div>
+
+  <div class="ph">
+    <h1>People <em>monitoring<span class="stop">.</span></em></h1>
+    <div class="deck">Individuals as distinct reputational entities — executives, public figures, brand ambassadors. Each with their own signal landscape, their own arc, their own audience.</div>
+  </div>
+
+  <!-- Roster -->
+  <div class="roster">
+    <div class="person active">
+      <div class="nm">T.S. Kalyanaraman</div>
+      <div class="role">Chairman · Kalyan</div>
+      <div class="meta"><span class="pos">+0.56</span><span class="neu">312 mentions</span></div>
+    </div>
+    <div class="person">
+      <div class="nm">Ramesh Kalyanaraman</div>
+      <div class="role">Exec. Director</div>
+      <div class="meta"><span class="pos">+0.34</span><span class="neu">142</span></div>
+    </div>
+    <div class="person">
+      <div class="nm">Rajesh Kalyanaraman</div>
+      <div class="role">Exec. Director</div>
+      <div class="meta"><span class="neu">+0.12</span><span class="neu">88</span></div>
+    </div>
+    <div class="person">
+      <div class="nm">Katrina Kaif</div>
+      <div class="role">Brand · Ambassador</div>
+      <div class="meta"><span class="pos">+0.62</span><span class="neu">2,180</span></div>
+    </div>
+    <div class="person">
+      <div class="nm">Amitabh Bachchan</div>
+      <div class="role">Brand · Ambassador</div>
+      <div class="meta"><span class="pos">+0.74</span><span class="neu">3,412</span></div>
+    </div>
+    <div class="person">
+      <div class="nm">M.G. George Muthoot</div>
+      <div class="role">Comp · Muthoot</div>
+      <div class="meta"><span class="pos">+0.28</span><span class="neu">96</span></div>
+    </div>
+    <div class="person">
+      <div class="nm">Ahammed M.P.</div>
+      <div class="role">Comp · Malabar Gold</div>
+      <div class="meta"><span class="neg">−0.18</span><span class="neu">122</span></div>
+    </div>
+    <div class="person">
+      <div class="nm">+ Add a person</div>
+      <div class="role" style="color: var(--vermilion-3);">Auto-resolve identity ↗</div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- LEFT — profile -->
+    <div>
+      <div class="profile-head">
+        <div class="lbl">Profile · 90 days · primary</div>
+        <h2>T.S. <em>Kalyanaraman</em></h2>
+        <div class="role">Chairman, Kalyan Jewellers · b. 1948 · resident, Thrissur</div>
+        <div class="figs">
+          <div class="fig"><div class="k">Sentiment · 90d</div><div class="v pos">+0.56</div><div class="note">Steady, supportive — across English, Malayalam, Tamil.</div></div>
+          <div class="fig"><div class="k">Mentions · 90d</div><div class="v">312</div><div class="note">Average 3.5 / day.</div></div>
+          <div class="fig"><div class="k">Source mix</div><div class="v" style="font-size: 18px;">Print 64%</div><div class="note">Business 31% · trade 22% · regional 11%.</div></div>
+          <div class="fig"><div class="k">Audience trust</div><div class="v" style="font-size: 18px;">High</div><div class="note">Net positive across 14 quarters.</div></div>
+        </div>
+      </div>
+
+      <div class="arc-box">
+        <h4 class="timeline-h">Reputation arc · 12 months</h4>
+        <svg viewBox="0 0 1100 180" preserveAspectRatio="none">
+          <line x1="0" y1="90" x2="1100" y2="90" stroke="#2A261E" stroke-width="1" stroke-dasharray="2 4"/>
+          <text x="6" y="20" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">+1.0</text>
+          <text x="6" y="94" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">  0</text>
+          <text x="6" y="170" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">−1.0</text>
+
+          <path d="M0,60 L80,58 L160,52 L240,48 L320,42 L400,46 L480,52 L560,48 L640,44 L720,38 L800,42 L880,52 L960,58 L1040,52 L1100,50"
+                fill="none" stroke="#5A6B3F" stroke-width="2.5"/>
+          <circle cx="320" cy="42" r="3" fill="#5A6B3F"/>
+          <circle cx="720" cy="38" r="3" fill="#5A6B3F"/>
+          <circle cx="1040" cy="52" r="3" fill="#5A6B3F"/>
+          <circle cx="1100" cy="50" r="4" fill="#E85543"/>
+
+          <line x1="320" y1="42" x2="320" y2="10" stroke="#7A7263" stroke-dasharray="2 3" stroke-width="1"/>
+          <text x="324" y="14" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">A · IPO listing anniversary</text>
+          <line x1="720" y1="38" x2="720" y2="10" stroke="#7A7263" stroke-dasharray="2 3" stroke-width="1"/>
+          <text x="724" y="14" font-family="JetBrains Mono" font-size="9" fill="#7A7263" letter-spacing="1">B · Forbes profile, Q4</text>
+          <line x1="1100" y1="50" x2="1100" y2="10" stroke="#E85543" stroke-dasharray="2 3" stroke-width="1"/>
+          <text x="1098" y="14" font-family="JetBrains Mono" font-size="9" fill="#E85543" letter-spacing="1" text-anchor="end">★ Forbes India profile · Mon</text>
+        </svg>
+        <div class="arc-axis">
+          <span>May '25</span><span>Jul</span><span>Sep</span><span>Nov</span><span>Jan '26</span><span>Mar</span><span>Apr · today</span>
+        </div>
+      </div>
+
+      <h4 class="timeline-h">Recent mentions · last 14 days</h4>
+
+      <div class="mention">
+        <div class="when"><span class="date">25 Apr · today</span>06:22 IST</div>
+        <div class="body-m">
+          <h5>Forbes India reporter has spoken to <em>two adjacent sources</em>.</h5>
+          <p>"Indications, from the conversations, that the framing will be sympathetic — emphasising the family-business-to-listed-company arc rather than current controversies."</p>
+        </div>
+        <div class="src">Forbes India<br/>Sourcing<span class="sent pos">↗ pos</span></div>
+      </div>
+
+      <div class="mention">
+        <div class="when"><span class="date">23 Apr</span>10:14 IST</div>
+        <div class="body-m">
+          <h5>Quoted in <em>The Hindu BusinessLine</em> on hallmarking enforcement.</h5>
+          <p>"The Chairman defended Kalyan's audit practice in a 12-minute phone interview, citing the Thrissur audit floor and quarterly compliance summaries."</p>
+        </div>
+        <div class="src">BusinessLine<br/>Print · EN<span class="sent pos">+0.42</span></div>
+      </div>
+
+      <div class="mention">
+        <div class="when"><span class="date">19 Apr</span>17:30 IST</div>
+        <div class="body-m">
+          <h5>Spoke at the <em>Kerala Chamber of Commerce</em> — speech excerpts widely shared.</h5>
+          <p>"Trust is built one customer at a time. It is lost in a sentence."</p>
+        </div>
+        <div class="src">KCC · ML<br/>Speech<span class="sent pos">+0.78</span></div>
+      </div>
+
+      <div class="mention">
+        <div class="when"><span class="date">14 Apr</span>09:08 IST</div>
+        <div class="body-m">
+          <h5>Akshaya Tritiya pre-event interview, <em>Manorama News</em>.</h5>
+          <p>"Discussed gold prices, the festive demand outlook, and the company's expansion in Tier-2 markets. No mention of hallmarking."</p>
+        </div>
+        <div class="src">Manorama TV<br/>ML · Video<span class="sent pos">+0.52</span></div>
+      </div>
+
+      <div class="mention">
+        <div class="when"><span class="date">11 Apr</span>—</div>
+        <div class="body-m">
+          <h5>Pillai segment names the family business — but not the Chairman by name.</h5>
+          <p>"This is the moment Insyt's identity-resolution flagged. The story is about Kalyan as an entity; the Chairman remains, today, undamaged."</p>
+        </div>
+        <div class="src">YouTube<br/>ML · Indep.<span class="sent neu">−0.04</span></div>
+      </div>
+    </div>
+
+    <!-- RIGHT — topics + competitors + editorial -->
+    <div class="side">
+
+      <h4>Topics — what is he being talked about for?</h4>
+
+      <div class="topic">
+        <div class="nm pos"><strong>Stewardship</strong> · the family-business arc<em>15 articles cite the founding story</em></div>
+        <div class="vol">+0.74</div>
+      </div>
+      <div class="topic">
+        <div class="nm pos"><strong>Hallmarking practice</strong> · audit floor in Thrissur<em>BusinessLine, Manorama, Mint</em></div>
+        <div class="vol">+0.56</div>
+      </div>
+      <div class="topic">
+        <div class="nm pos">Akshaya Tritiya outlook<em>Mentioned in 9 pre-event pieces</em></div>
+        <div class="vol">+0.48</div>
+      </div>
+      <div class="topic">
+        <div class="nm">Tier-2 expansion<em>Trade press, neutral framing</em></div>
+        <div class="vol">+0.18</div>
+      </div>
+      <div class="topic">
+        <div class="nm">Succession &amp; family governance<em>Watching closely</em></div>
+        <div class="vol">−0.04</div>
+      </div>
+      <div class="topic">
+        <div class="nm neg"><strong>Pillai segment</strong> · adjacency, not direct<em>Not yet a personal-reputation issue</em></div>
+        <div class="vol">−0.34</div>
+      </div>
+
+      <h4 style="margin-top: 32px;">Comparison · jewellery sector chairmen</h4>
+
+      <div class="topic">
+        <div class="nm"><strong>T.S. Kalyanaraman</strong> · You<em>Steady, supportive arc</em></div>
+        <div class="vol" style="color: var(--vermilion-3);">+0.56</div>
+      </div>
+      <div class="topic">
+        <div class="nm">Ahammed M.P. · Malabar<em>Mixed — declining sentiment</em></div>
+        <div class="vol">−0.18</div>
+      </div>
+      <div class="topic">
+        <div class="nm">M.G. George Muthoot · Muthoot<em>Steady, low-volume</em></div>
+        <div class="vol">+0.28</div>
+      </div>
+      <div class="topic">
+        <div class="nm">C.K. Venkataraman · Titan<em>Highly supportive — corp. governance</em></div>
+        <div class="vol">+0.68</div>
+      </div>
+
+      <div class="editorial">
+        <div class="lab">Insyt's view · The Chairman</div>
+        The Chairman is currently the best asset the brand has against the hallmarking story. His personal trust premium is high; his name has not yet attached to the controversy. A first-person regional statement, attributed to him, would benefit from his arc — and would not damage it. We have drafted one for review.
+      </div>
+
+      <div style="margin-top: 16px; padding: 16px; border: 1px solid var(--slate-edge); font-size: 13px; line-height: 1.5; color: var(--bone-2);">
+        <div class="t-label" style="color: var(--bone-3); margin-bottom: 8px;">Watching for</div>
+        <p style="margin: 0 0 8px;">— Forbes India profile · Monday<br/>— Any direct attribution in Mathrubhumi or Manorama print<br/>— Akshaya Tritiya day appearances · 9 May<br/>— Kerala Chamber Q3 address · 14 May</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

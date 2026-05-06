@@ -5,21 +5,52 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Insyt Brand Design System
- * Colors: ink, ochre, slate, stone, parchment, paper, white
- * Fonts: Cormorant Garamond (display), Inter (body), JetBrains Mono (mono/metadata)
+ * Insyt Design System — Dual-surface Editorial
+ * Light (default): broadsheet paper surface — FT after a minute
+ * Dark: warm slate product surface
+ * Type: Spectral serif throughout, JetBrains Mono for labels
+ * Accent: vermilion (sindoor red) — the only chromatic note
  */
 
 @theme inline {
-  /* Brand colors — direct access */
-  --color-ink: #0A0A0A;
-  --color-ochre: #B7410E;
-  --color-slate: #4A4542;
-  --color-stone: #8A867E;
-  --color-parchment: #EDE6DA;
-  --color-paper: #F7F3EB;
+  /* ── Static color tokens (always available) ── */
+  --color-paper: #F8F7F4;
+  --color-paper-2: #EDEAE3;
+  --color-paper-edge: #D5D1C7;
+  --color-ink: #14130F;
+  --color-ink-2: #2A2924;
+  --color-ink-3: #66635A;
+  --color-ink-4: #95918A;
 
-  /* Shadcn semantic mapping */
+  --color-slate: #0E0D0B;
+  --color-slate-2: #16140F;
+  --color-slate-3: #1E1B15;
+  --color-slate-edge: #2A261E;
+  --color-bone: #E8E1D2;
+  --color-bone-2: #B8AF9C;
+  --color-bone-3: #7A7263;
+  --color-bone-4: #4A4438;
+
+  --color-vermilion: #C8392C;
+  --color-vermilion-2: #A82E22;
+  --color-vermilion-3: #E85543;
+
+  --color-positive: #5A6B3F;
+  --color-negative: #8B2E1F;
+  --color-caution: #9A7A2E;
+
+  /* ── Semantic surface tokens (swap with theme) ── */
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-edge: var(--surface-edge);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+  --color-accent: var(--vermilion-on-surface);
+
+  /* ── Shadcn semantic mapping ── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -32,85 +63,91 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Sidebar */
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  /* ── Fonts ── */
+  --font-sans: var(--font-spectral), 'Spectral', 'Charter', 'Iowan Old Style', Georgia, serif;
+  --font-serif: var(--font-spectral), 'Spectral', 'GT Sectra', 'Charter', Georgia, serif;
+  --font-mono: var(--font-jetbrains), 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
-  /* Charts */
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-
-  /* Fonts */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
-  --font-display: var(--font-cormorant), Georgia, serif;
-  --font-heading: var(--font-cormorant), Georgia, serif;
-
-  /* Radius */
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* ── Radius: zero everywhere ── */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 }
 
+/* ── LIGHT THEME (default) ── */
 :root {
-  /* Map brand tokens to Shadcn semantic variables */
-  --background: #F7F3EB;       /* paper */
-  --foreground: #0A0A0A;       /* ink */
+  /* Semantic surface — paper family */
+  --surface: #F8F7F4;
+  --surface-2: #EDEAE3;
+  --surface-3: #E4DFD5;
+  --surface-edge: #D5D1C7;
+  --text: #14130F;
+  --text-2: #2A2924;
+  --text-3: #66635A;
+  --text-4: #95918A;
+  --vermilion-on-surface: #C8392C;
+
+  /* Shadcn */
+  --background: #F8F7F4;
+  --foreground: #14130F;
   --card: #FFFFFF;
-  --card-foreground: #0A0A0A;
+  --card-foreground: #14130F;
   --popover: #FFFFFF;
-  --popover-foreground: #0A0A0A;
-  --primary: #0A0A0A;          /* ink as primary */
-  --primary-foreground: #F7F3EB;
-  --secondary: #EDE6DA;        /* parchment */
-  --secondary-foreground: #0A0A0A;
-  --muted: #EDE6DA;            /* parchment */
-  --muted-foreground: #8A867E; /* stone */
-  --accent: #EDE6DA;
-  --accent-foreground: #0A0A0A;
-  --destructive: #B7410E;      /* ochre for destructive/alerts */
-  --border: #E2DCD2;
-  --input: #E2DCD2;
-  --ring: #B7410E;             /* ochre ring on focus */
+  --popover-foreground: #14130F;
+  --primary: #14130F;
+  --primary-foreground: #F8F7F4;
+  --secondary: #EDEAE3;
+  --secondary-foreground: #14130F;
+  --muted: #EDEAE3;
+  --muted-foreground: #66635A;
+  --accent: #EDEAE3;
+  --accent-foreground: #14130F;
+  --destructive: #C8392C;
+  --border: #D5D1C7;
+  --input: #D5D1C7;
+  --ring: #C8392C;
+  --radius: 0px;
+}
 
-  /* Chart colors — warm editorial palette */
-  --chart-1: #0A0A0A;
-  --chart-2: #B7410E;
-  --chart-3: #4A4542;
-  --chart-4: #8A867E;
-  --chart-5: #D4C9B8;
+/* ── DARK THEME ── */
+.dark {
+  --surface: #0E0D0B;
+  --surface-2: #16140F;
+  --surface-3: #1E1B15;
+  --surface-edge: #2A261E;
+  --text: #E8E1D2;
+  --text-2: #B8AF9C;
+  --text-3: #7A7263;
+  --text-4: #4A4438;
+  --vermilion-on-surface: #E85543;
 
-  --radius: 0.5rem;
-
-  /* Sidebar */
-  --sidebar: #FFFFFF;
-  --sidebar-foreground: #4A4542;
-  --sidebar-primary: #0A0A0A;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F7F3EB;
-  --sidebar-accent-foreground: #0A0A0A;
-  --sidebar-border: #E2DCD2;
-  --sidebar-ring: #B7410E;
+  --background: #0E0D0B;
+  --foreground: #E8E1D2;
+  --card: #16140F;
+  --card-foreground: #E8E1D2;
+  --popover: #16140F;
+  --popover-foreground: #E8E1D2;
+  --primary: #E8E1D2;
+  --primary-foreground: #0E0D0B;
+  --secondary: #1E1B15;
+  --secondary-foreground: #B8AF9C;
+  --muted: #1E1B15;
+  --muted-foreground: #7A7263;
+  --accent: #1E1B15;
+  --accent-foreground: #E8E1D2;
+  --destructive: #C8392C;
+  --border: #2A261E;
+  --input: #2A261E;
+  --ring: #C8392C;
 }
 
 @layer base {
@@ -119,24 +156,87 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "kern", "liga", "onum";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   html {
-    @apply font-sans;
+    @apply font-serif;
   }
 
-  /* Display typography utility */
-  .font-display {
-    font-family: var(--font-display);
+  /* ── Type scale (9 sizes, used with discipline) ── */
+  .t-display {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 96px;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+  .t-headline {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 56px;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+  }
+  .t-title {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 36px;
+    line-height: 1.08;
+    letter-spacing: -0.015em;
+  }
+  .t-subtitle {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+  }
+  .t-lede {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+  }
+  .t-body {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .t-small {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .t-caption {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.4;
+    font-style: italic;
+    color: var(--text-3);
+  }
+  .t-label {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
-  /* Metadata text style from brief */
+  /* Legacy utility compat */
   .text-meta {
     font-family: var(--font-mono);
     font-size: 0.6875rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
-
   .text-label {
     font-family: var(--font-mono);
     font-size: 0.625rem;

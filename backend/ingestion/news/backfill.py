@@ -23,16 +23,31 @@ settings = get_settings()
 
 # Queries to run for each time window
 BACKFILL_QUERIES = [
+    # Kalyan core
     '"Kalyan Jewellers"',
     '"KALYANKJIL"',
     '"Kalyan Jewellers" stock',
     '"Kalyan Jewellers" results',
     '"Candere" jewellery',
+    'Kalyan Jewellers Kalyanaraman',
+    # Competitors
     '"Tanishq" jewellery india',
     '"Malabar Gold" india',
     '"Joyalukkas"',
-    'Kalyan Jewellers Kalyanaraman',
+    '"Senco Gold"',
+    '"Titan Company" jewellery',
+    # Industry
     '"jewellery industry" india gold',
+    'hallmarking india jewellery',
+    '"Akshaya Tritiya" jewellery',
+    # Regulatory
+    '"SEBI" jewellery company india',
+    '"BIS hallmarking" enforcement',
+    '"gold import duty" india',
+    # Ambassadors
+    '"Amitabh Bachchan" brand ambassador jewellery',
+    '"Katrina Kaif" Kalyan',
+    '"Manju Warrier" Kalyan',
 ]
 
 

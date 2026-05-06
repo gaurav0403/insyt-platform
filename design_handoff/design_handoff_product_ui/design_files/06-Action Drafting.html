@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1440" />
+<title>Insyt. — The Drafting Engine</title>
+<link rel="stylesheet" href="shared.css" />
+<style>
+  body { background: var(--slate); color: var(--bone); }
+  .app { width: 1440px; margin: 0 auto; }
+
+  .chrome { border-bottom: 1px solid var(--slate-edge); padding: 14px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .chrome .l, .chrome .r { display: flex; align-items: center; gap: 28px; }
+  .chrome .nav { display: flex; gap: 24px; font-size: 14px; }
+  .chrome .nav a { color: var(--bone-2); padding-bottom: 2px; }
+  .chrome .nav a.active { color: var(--bone); border-bottom: 1px solid var(--vermilion-3); }
+  .chrome .meta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .chrome .actor { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .chrome .av { width: 28px; height: 28px; background: var(--vermilion); color: var(--bone); display: grid; place-items: center; font-size: 12px; font-weight: 500; }
+
+  /* Title */
+  .ph {
+    padding: 28px 64px 20px;
+    border-bottom: 1px solid var(--slate-edge);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .ph h1 { margin: 0; font-size: 44px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; }
+  .ph h1 em { font-style: italic; }
+  .ph h1 .stop { color: var(--vermilion-3); }
+  .ph .breadcrumb { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bone-3); }
+  .ph .breadcrumb .v3 { color: var(--vermilion-3); }
+
+  /* Three columns: context · draft · controls */
+  .work {
+    display: grid;
+    grid-template-columns: 320px 1fr 320px;
+    min-height: calc(100vh - 100px);
+  }
+  .ctx { border-right: 1px solid var(--slate-edge); padding: 28px; }
+  .editor { background: var(--paper); color: var(--ink); padding: 56px 64px; }
+  .ctrl { border-left: 1px solid var(--slate-edge); padding: 28px; }
+
+  /* CONTEXT (left) */
+  .ctx h4 {
+    margin: 0 0 12px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--bone-3); font-weight: 500;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--bone);
+  }
+  .ctx-block {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .ctx-block .lab {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-bottom: 6px;
+  }
+  .ctx-block .nm { font-size: 14px; line-height: 1.45; color: var(--bone); }
+  .ctx-block .nm em { color: var(--bone-3); font-style: italic; }
+  .ctx-block .deck { font-size: 12px; color: var(--bone-3); font-style: italic; margin-top: 6px; line-height: 1.45; }
+
+  .src {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--slate-edge);
+    display: grid; grid-template-columns: 1fr 32px; gap: 8px; align-items: baseline;
+  }
+  .src:last-child { border-bottom: 0; }
+  .src .nm { font-size: 13px; line-height: 1.4; color: var(--bone-2); }
+  .src .nm em { font-style: italic; color: var(--bone-3); font-size: 11px; display: block; margin-top: 2px; }
+  .src .badge {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--vermilion-3); text-align: right;
+  }
+
+  /* EDITOR (center) -- the brief itself, on cream */
+  .editor .doc-head {
+    border-bottom: 1.5px solid var(--ink);
+    padding-bottom: 16px;
+    margin-bottom: 32px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .editor .doc-head .wm { font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacing: -0.02em; }
+  .editor .doc-head .wm .stop { color: var(--vermilion); }
+  .editor .doc-head .meta {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .editor .doc-eyebrow {
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--vermilion); margin-bottom: 16px;
+  }
+  .editor h2 {
+    margin: 0 0 14px;
+    font-size: 44px; font-weight: 500;
+    line-height: 1.05; letter-spacing: -0.02em;
+    color: var(--ink);
+    max-width: 720px;
+  }
+  .editor h2 em { font-style: italic; }
+  .editor .deck {
+    font-size: 19px; line-height: 1.45;
+    color: var(--ink-2); font-style: italic;
+    margin-bottom: 28px; max-width: 680px;
+  }
+  .editor p {
+    font-size: 16px; line-height: 1.65;
+    color: var(--ink-2);
+    margin: 0 0 16px;
+    max-width: 640px;
+  }
+  .editor p strong { color: var(--ink); font-weight: 500; }
+  .editor .footnote-mark { color: var(--vermilion); font-style: italic; vertical-align: super; font-size: 12px; }
+
+  /* Inline edited highlight */
+  .edited {
+    background: rgba(200,57,44,0.10);
+    border-bottom: 1px solid var(--vermilion);
+    padding: 0 2px;
+  }
+  .editor .signoff {
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--paper-edge);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .editor .footnotes {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--paper-edge);
+    font-size: 12px; line-height: 1.55;
+    color: var(--ink-3);
+    font-style: italic;
+    counter-reset: fn;
+  }
+  .editor .footnotes .fn { padding: 4px 0; }
+  .editor .footnotes .fn .num { color: var(--vermilion); font-weight: 500; font-style: normal; margin-right: 6px; }
+
+  /* CONTROLS (right) */
+  .ctrl h4 {
+    margin: 0 0 12px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--bone-3); font-weight: 500;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--bone);
+  }
+
+  .ctrl-block {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--slate-edge);
+  }
+  .ctrl-block .lab {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--bone-3); margin-bottom: 10px;
+  }
+  .seg {
+    display: flex;
+    border: 1px solid var(--slate-edge);
+  }
+  .seg .opt {
+    flex: 1;
+    padding: 8px 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--bone-2);
+    border-right: 1px solid var(--slate-edge);
+    cursor: pointer;
+  }
+  .seg .opt:last-child { border-right: 0; }
+  .seg .opt.on { background: var(--bone); color: var(--slate); }
+
+  .slider-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .slider-row .nm { font-size: 13px; color: var(--bone); }
+  .slider-row .v { font-family: var(--mono); font-size: 11px; color: var(--bone-3); }
+  .slider {
+    height: 4px; background: var(--slate-edge); position: relative;
+  }
+  .slider .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--vermilion-3); }
+  .slider .knob {
+    position: absolute; top: -4px; width: 10px; height: 12px;
+    background: var(--bone); transform: translateX(-50%);
+  }
+
+  .send-row {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--slate-edge);
+  }
+  .btn-primary {
+    display: block; width: 100%;
+    padding: 14px 18px; text-align: left;
+    background: var(--vermilion); color: var(--bone);
+    margin-bottom: 8px; border: 1px solid var(--vermilion);
+    cursor: pointer;
+  }
+  .btn-primary .lab {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    opacity: 0.7; margin-bottom: 4px;
+  }
+  .btn-primary .nm { font-size: 15px; font-weight: 500; }
+  .btn-primary .nm .arrow { float: right; font-style: italic; }
+  .btn-secondary {
+    display: block; width: 100%;
+    padding: 12px 16px; text-align: left;
+    background: transparent; color: var(--bone-2);
+    border: 1px solid var(--slate-edge); margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .btn-secondary .arrow { float: right; }
+
+  .approval {
+    margin-top: 16px; padding: 14px;
+    border: 1px solid var(--slate-edge);
+    background: var(--slate-2);
+    font-size: 12px; line-height: 1.55;
+    color: var(--bone-3);
+  }
+  .approval .lab {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--bone); margin-bottom: 6px;
+  }
+  .approval .name { color: var(--bone); font-weight: 500; }
+
+  /* Tabs across the top of the editor */
+  .doc-tabs {
+    display: flex; gap: 4px;
+    margin-bottom: 24px;
+  }
+  .doc-tabs .tab {
+    padding: 8px 14px;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-3);
+    border: 1px solid var(--paper-edge);
+    background: var(--paper-2);
+    cursor: pointer;
+  }
+  .doc-tabs .tab.on {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+</style>
+</head>
+<body class="on-slate">
+<div class="app">
+
+  <!-- Chrome -->
+  <div class="chrome">
+    <div class="l">
+      <div class="wordmark" style="font-size: 22px;">Insyt<span class="stop">.</span></div>
+      <div class="nav">
+        <a>Daily</a><a>Narrative</a><a>Replay</a><a class="active">Drafts</a><a>Regional</a><a>Ground</a><a>People</a>
+      </div>
+    </div>
+    <div class="r">
+      <span class="meta">⌘K · Search drafts</span>
+      <span class="meta">25 Apr 2026 · 06:48 IST</span>
+      <div class="actor"><div class="av">RK</div><span style="color: var(--bone-2);">Ramesh K.</span></div>
+    </div>
+  </div>
+
+  <!-- Page header -->
+  <div class="ph">
+    <div>
+      <h1>The drafting <em>engine<span class="stop">.</span></em></h1>
+    </div>
+    <div class="breadcrumb">
+      Stories &nbsp;·&nbsp; Hallmarking · Kerala &nbsp;·&nbsp; <span class="v3">▍ Regional press response · v3 · in review</span>
+    </div>
+  </div>
+
+  <div class="work">
+
+    <!-- LEFT — context -->
+    <div class="ctx">
+      <h4>Grounded in</h4>
+
+      <div class="ctx-block">
+        <div class="lab">Story</div>
+        <div class="nm">The hallmarking question reaches Kerala. <em>Severity 3 · Reputational</em></div>
+        <div class="deck">Pillai segment, +318% mentions vs 7d, sentiment −0.62</div>
+      </div>
+
+      <div class="ctx-block">
+        <div class="lab">Voice profile</div>
+        <div class="nm">Kalyan Jewellers · CEO comms — <em>past 24 statements</em></div>
+        <div class="deck">Style absorbed from your published material. Sentence length, lexicon, signature phrases.</div>
+      </div>
+
+      <div class="ctx-block">
+        <div class="lab">Comparable arcs</div>
+        <div class="nm">Tanishq · Mar 2023 <em>(replayed)</em></div>
+        <div class="nm" style="margin-top: 6px;">Titan · Jul 2024 <em>(replayed)</em></div>
+        <div class="nm" style="margin-top: 6px;">Senco · Feb 2025 <em>(noted)</em></div>
+      </div>
+
+      <h4 style="margin-top: 32px;">Sources cited · 7</h4>
+      <div class="src"><div class="nm">Pillai, R. <em>"Hallmark, halfmark, no mark" · YouTube · 24 Apr</em></div><div class="badge">[1]</div></div>
+      <div class="src"><div class="nm">BIS Circular 2024-HM-87 <em>14 Feb 2024 · Bureau of Indian Standards</em></div><div class="badge">[2]</div></div>
+      <div class="src"><div class="nm">Mathrubhumi feature column <em>09 Apr · Kochi edition</em></div><div class="badge">[3]</div></div>
+      <div class="src"><div class="nm">Kalyan Q3 audit summary <em>internal · 2026</em></div><div class="badge">[4]</div></div>
+      <div class="src"><div class="nm">WhatsApp propagation index <em>v4.2 · 38 channels</em></div><div class="badge">[5]</div></div>
+      <div class="src"><div class="nm">Tanishq audit white-paper <em>18 Mar 2023 · public</em></div><div class="badge">[6]</div></div>
+      <div class="src"><div class="nm">Comparative arcs corpus <em>internal · 2026</em></div><div class="badge">[7]</div></div>
+    </div>
+
+    <!-- CENTER — the draft, on cream -->
+    <div class="editor">
+      <div class="doc-head">
+        <div class="wm">Insyt<span class="stop">.</span> draft</div>
+        <div class="meta">For Mathrubhumi, Manorama Online · Kerala · Embargoed 10:00 IST</div>
+      </div>
+
+      <div class="doc-tabs">
+        <span class="tab on">Malayalam · Press</span>
+        <span class="tab">English · National</span>
+        <span class="tab">Internal brief</span>
+        <span class="tab">Social · CEO</span>
+        <span class="tab">+ 2 more</span>
+      </div>
+
+      <div class="doc-eyebrow">Statement · 25 Apr 2026 · For attribution to T.S. Kalyanaraman</div>
+      <h2>On the <em>practice</em> of hallmarking — at Kalyan, since 2007.</h2>
+      <div class="deck">A statement framed as continuity of practice, not response to controversy. Set for Kerala outlets ahead of the English-press cycle.</div>
+
+      <p>For nineteen years, every karat of gold sold under our name in Kerala has passed through a four-stage hallmarking audit, the last of which is conducted at our Thrissur facility — twelve kilometres from the showroom this story names<span class="footnote-mark">¹</span>.</p>
+
+      <p>We <span class="edited">welcome the conversation Ms. Pillai has begun</span>. We <span class="edited">invite</span> her, and any reader of this paper who has questions, to visit the Thrissur audit floor — unannounced, with their own scales, on any working day. We have been opening this floor to journalists since 2014.</p>
+
+      <p>Hallmarking is not a controversy. It is a practice. <strong>It is what separates our trade from a market.</strong> The BIS circular of February 2024<span class="footnote-mark">²</span> formalised what regional chains in Kerala — ours among the first — had been doing for a decade.</p>
+
+      <p>To the customer who has trusted us for a wedding, an inheritance, or a first piece of gold for a daughter: every certificate we issue is verifiable, in person and online, against the BIS register<span class="footnote-mark">⁴</span>. If the certificate ever does not match the assay, we will replace the piece — and we will write the cheque from the Chairman's office. That has been our written policy since 2007.</p>
+
+      <div class="signoff">— T.S. Kalyanaraman, Chairman · For release at 10:00 IST</div>
+
+      <div class="footnotes">
+        <div class="fn"><span class="num">¹</span>Kalyan Q3 internal audit summary, 2026 (cited at line 1).</div>
+        <div class="fn"><span class="num">²</span>BIS Circular 2024-HM-87, dated 14 February 2024.</div>
+        <div class="fn"><span class="num">³</span>Implicit reference to Pillai (2026); citation suppressed at request of voice profile.</div>
+        <div class="fn"><span class="num">⁴</span>Per BIS public verification portal · accessed 24 Apr 2026.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT — controls -->
+    <div class="ctrl">
+      <h4>Refine</h4>
+
+      <div class="ctrl-block">
+        <div class="lab">Audience</div>
+        <div class="seg">
+          <div class="opt on">Regional</div>
+          <div class="opt">National</div>
+          <div class="opt">Trade</div>
+        </div>
+      </div>
+
+      <div class="ctrl-block">
+        <div class="lab">Channel</div>
+        <div class="seg">
+          <div class="opt on">Press</div>
+          <div class="opt">Social</div>
+          <div class="opt">Internal</div>
+          <div class="opt">Reg.</div>
+        </div>
+      </div>
+
+      <div class="ctrl-block">
+        <div class="lab">Language</div>
+        <div class="seg">
+          <div class="opt on">Malayalam</div>
+          <div class="opt">English</div>
+          <div class="opt">Tamil</div>
+          <div class="opt">Hindi</div>
+        </div>
+        <div style="margin-top: 8px; font-size: 11px; color: var(--bone-3); font-style: italic; line-height: 1.45;">Translation by an Insyt-certified Malayalam editor; reviewed before publication.</div>
+      </div>
+
+      <div class="ctrl-block">
+        <div class="lab">Tone</div>
+        <div class="slider-row"><span class="nm">Conciliatory ↔ Firm</span><span class="v">0.34</span></div>
+        <div class="slider"><div class="fill" style="width: 34%;"></div><div class="knob" style="left: 34%;"></div></div>
+
+        <div class="slider-row" style="margin-top: 16px;"><span class="nm">Defensive ↔ Confident</span><span class="v">0.78</span></div>
+        <div class="slider"><div class="fill" style="width: 78%;"></div><div class="knob" style="left: 78%;"></div></div>
+
+        <div class="slider-row" style="margin-top: 16px;"><span class="nm">Formal ↔ Personal</span><span class="v">0.52</span></div>
+        <div class="slider"><div class="fill" style="width: 52%;"></div><div class="knob" style="left: 52%;"></div></div>
+      </div>
+
+      <div class="ctrl-block">
+        <div class="lab">Length</div>
+        <div class="seg">
+          <div class="opt">Short · 80w</div>
+          <div class="opt on">Med · 240w</div>
+          <div class="opt">Long · 480w</div>
+        </div>
+      </div>
+
+      <div class="ctrl-block">
+        <div class="lab">Anchor on</div>
+        <div style="font-size: 13px; color: var(--bone-2); line-height: 1.6; padding-top: 4px;">
+          ☑ Continuity of practice<br/>
+          ☑ Verifiable claim<br/>
+          ☑ Direct invitation<br/>
+          ☐ Mention competitors<br/>
+          ☐ Reference Pillai by name
+        </div>
+      </div>
+
+      <div class="send-row">
+        <button class="btn-primary">
+          <div class="lab">Approve &amp; queue for 10:00 IST</div>
+          <div class="nm">Approve · v3 final <span class="arrow">→</span></div>
+        </button>
+        <button class="btn-secondary">Send to Comms team for review <span class="arrow">→</span></button>
+        <button class="btn-secondary">Export · PDF · Word · Plain <span class="arrow">→</span></button>
+        <button class="btn-secondary">Regenerate from sources <span class="arrow">↻</span></button>
+
+        <div class="approval">
+          <div class="lab">Awaiting</div>
+          Comms Director · <span class="name">P. Mohan</span> · Sent 06:42 IST<br/>
+          Legal · <span class="name">A. Singh</span> · Sent 06:42 IST<br/>
+          <span style="color: var(--bone-2);">2 sign-offs required before send.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
